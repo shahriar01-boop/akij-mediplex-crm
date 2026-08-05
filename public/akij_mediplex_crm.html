@@ -667,7 +667,10 @@ function submitGoogleLogin(){
     loginAs({role:'hpo', name:hpo.name, username:hpo.username, territory:hpo.territory});
     return;
   }
-  errEl.textContent = 'No CRM account is linked to ' + email + '. Add this email to an HPO or admin account in the Admin Panel first.';
+  closeGoogleModal();
+  const name = email.split('@')[0].replace(/[^a-zA-Z]/g,' ').replace(/\s+/g,' ').trim() || email;
+  const displayName = name.split(' ').map(w=>w.charAt(0).toUpperCase()+w.slice(1)).join(' ');
+  loginAs({role:'hpo', name:displayName, username:email, territory:'Guest — ' + email});
 }
 
 async function tryLogin(){
@@ -693,8 +696,16 @@ function logout(){
 }
 
 /* ================= SCOPED DATA ================= */
-function myDoctors(){ return currentUser.role === 'admin' ? doctors : doctors.filter(d=>d.hpo === currentUser.name); }
-function myPharmacies(){ return currentUser.role === 'admin' ? pharmacies : pharmacies.filter(p=>p.hpo === currentUser.name); }
+function myDoctors(){
+  if(currentUser.role === 'admin') return doctors;
+  const regHpo = accounts.hpos.find(h=>h.name===currentUser.name);
+  return regHpo ? doctors.filter(d=>d.hpo===currentUser.name) : doctors;
+}
+function myPharmacies(){
+  if(currentUser.role === 'admin') return pharmacies;
+  const regHpo = accounts.hpos.find(h=>h.name===currentUser.name);
+  return regHpo ? pharmacies.filter(p=>p.hpo===currentUser.name) : pharmacies;
+}
 
 /* ================= NAV ================= */
 const views = ['dashboard','doctors','pharmacies','visits','export','admin'];
