@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AKIJ Mediplex — HPO Customer &amp; Field CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#2E3192;
+    --navy-900:#22265E;
+    --navy-700:#3B3FAE;
+    --navy-100:#ECEDF9;
+    --navy-50:#F5F5FC;
+    --cyan:#1FBDC6;
+    --cyan-700:#149AA2;
+    --cyan-100:#E1F8F9;
+    --ink:#171B2E;
+    --muted:#666E8C;
+    --paper:#FFFFFF;
+    --line:#E1E2F0;
+    --red:#C24A3E;
+    --red-100:#F8E5E2;
+    --green:#2E8A5E;
+    --green-100:#E3F3EA;
+    --amber:#B9791E;
+    --amber-100:#FBEEDA;
+    --purple-100:#EFEAF9;
+    --purple:#6B4FA8;
+    --shadow: 0 1px 2px rgba(46,49,146,0.06), 0 8px 26px rgba(46,49,146,0.09);
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--navy-50);
+    color:var(--ink);
+    font-family:'Inter',system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{ background:var(--cyan-100); }
+  h1,h2,h3,.display{ font-family:'Fraunces',serif; font-weight:600; letter-spacing:-0.01em; }
+  .mono{ font-family:'IBM Plex Mono',monospace; }
+  a{color:inherit;}
+  button{font-family:inherit;}
+  .req{ color:var(--red); margin-left:2px; }
+  .field.missing input, .field.missing select, .field.missing textarea{ border-color:var(--red)!important; background:var(--red-100); }
+
+  /* ---------- Shell ---------- */
+  .app{ display:flex; min-height:100vh; }
+  .sidebar{
+    width:240px; flex-shrink:0;
+    background:linear-gradient(190deg, var(--navy-900), var(--navy) 65%);
+    color:#ECEDFB;
+    padding:22px 16px;
+    display:flex; flex-direction:column;
+    position:sticky; top:0; height:100vh;
+    border-right:3px solid var(--cyan);
+  }
+  .brand{ display:flex; align-items:center; gap:10px; padding:2px 6px 18px 6px; border-bottom:1px solid rgba(236,237,251,0.16); margin-bottom:16px; }
+  .brand-mark{ width:40px;height:40px;border-radius:10px; background:#fff; padding:4px; display:flex;align-items:center;justify-content:center; flex-shrink:0; box-shadow:0 2px 8px rgba(0,0,0,.18);}
+  .brand-mark img{ width:100%; height:100%; object-fit:contain; }
+  .brand-name{ font-family:'Fraunces',serif; font-size:15px; line-height:1.2; font-weight:600;}
+  .brand-sub{ font-size:10.5px; color:var(--cyan); letter-spacing:.06em; text-transform:uppercase; margin-top:2px; font-weight:600;}
+
+  .who{ background:rgba(255,255,255,0.08); border:1px solid rgba(236,237,251,0.16); border-radius:10px; padding:10px 12px; margin-bottom:14px; }
+  .who .name{ font-size:13px; font-weight:700; }
+  .who .role{ font-size:11px; color:var(--cyan); text-transform:uppercase; letter-spacing:.05em; margin-top:2px;}
+  .who button{ margin-top:8px; width:100%; }
+
+  nav{ display:flex; flex-direction:column; gap:2px; flex:1; }
+  .nav-item{ display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:9px; font-size:13.5px; font-weight:500; color:#CCD0F2; cursor:pointer; border:1px solid transparent; user-select:none; transition:background .15s ease;}
+  .nav-item .ic{ width:16px; text-align:center; opacity:.9; font-size:14px;}
+  .nav-item:hover{ background:rgba(236,237,251,0.09); }
+  .nav-item.active{ background:rgba(31,189,198,0.22); color:#fff; border-color:rgba(31,189,198,0.35); }
+  .nav-sep{ height:1px; background:rgba(236,237,251,0.14); margin:12px 4px; }
+  .sidebar-foot{ font-size:11px; color:#9AA1D9; padding:10px 8px 0 8px; }
+
+  .main{ flex:1; min-width:0; padding:32px 40px 60px; }
+  .topbar{ display:flex; align-items:baseline; justify-content:space-between; margin-bottom:26px; flex-wrap:wrap; gap:12px; border-bottom:2px solid var(--navy-100); padding-bottom:16px;}
+  .topbar h1{ font-size:26px; margin:0; color:var(--navy-900);}
+  .topbar .sub{ color:var(--muted); font-size:13.5px; margin-top:4px;}
+  .actions{ display:flex; gap:10px; }
+
+  .btn{ display:inline-flex; align-items:center; gap:7px; padding:9px 16px; border-radius:9px; border:1px solid var(--line); background:var(--paper); color:var(--ink); font-size:13.5px; font-weight:600; cursor:pointer; transition:transform .08s ease, box-shadow .15s ease; }
+  .btn:hover{ box-shadow:var(--shadow); }
+  .btn:active{ transform:scale(.98); }
+  .btn-primary{ background:var(--navy); color:#fff; border-color:transparent; }
+  .btn-cyan{ background:var(--cyan); color:#053235; border-color:transparent; }
+  .btn-ghost{ background:transparent; border-color:var(--line); }
+  .btn-danger{ background:var(--red-100); color:var(--red); border-color:transparent; }
+  .btn-sm{ padding:6px 11px; font-size:12.5px; border-radius:7px; }
+  .btn[disabled]{ opacity:.5; cursor:not-allowed; }
+
+  /* ---------- Cards / KPIs ---------- */
+  .grid-kpi{ display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:14px; margin-bottom:28px; }
+  .kpi{ background:var(--paper); border:1px solid var(--line); border-top:3px solid var(--cyan); border-radius:var(--radius); padding:18px 18px 16px; box-shadow:var(--shadow); }
+  .kpi .label{ font-size:11.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:600;}
+  .kpi .value{ font-family:'Fraunces',serif; font-size:29px; margin-top:6px; color:var(--navy-900);}
+  .kpi .delta{ font-size:12px; margin-top:4px; color:var(--muted);}
+  .kpi .delta.up{ color:var(--green); }
+  .kpi .delta.warn{ color:var(--amber); }
+
+  .panel{ background:var(--paper); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); padding:22px 22px 10px; margin-bottom:24px;}
+  .panel h2{ font-size:17px; margin:0 0 4px; color:var(--navy-900);}
+  .panel .desc{ color:var(--muted); font-size:12.5px; margin-bottom:14px; }
+
+  .grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:18px; align-items:start; }
+  @media (max-width:980px){ .grid-2{ grid-template-columns:1fr; } }
+
+  .gap-row{ display:flex; align-items:center; gap:12px; padding:11px 0; border-bottom:1px solid var(--line); }
+  .gap-row:last-child{ border-bottom:none; }
+  .gap-name{ width:150px; flex-shrink:0; font-size:13px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .gap-track{ flex:1; height:10px; border-radius:6px; background:var(--navy-100); position:relative; overflow:hidden;}
+  .gap-fill{ position:absolute; left:0; top:0; bottom:0; border-radius:6px; background:var(--cyan); }
+  .gap-fill.low{ background:var(--red); }
+  .gap-fill.mid{ background:var(--amber); }
+  .gap-pct{ width:44px; text-align:right; font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--muted); flex-shrink:0;}
+
+  .table-wrap{ overflow-x:auto; }
+  table{ width:100%; border-collapse:collapse; font-size:13px; }
+  thead th{ text-align:left; padding:10px 12px; font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); border-bottom:2px solid var(--navy-100); white-space:nowrap; font-weight:700; position:sticky; top:0; background:var(--paper); }
+  tbody td{ padding:11px 12px; border-bottom:1px solid var(--line); white-space:nowrap; }
+  tbody tr:hover{ background:var(--navy-50); }
+  .id-tag{ font-family:'IBM Plex Mono',monospace; font-size:12px; background:var(--navy-100); color:var(--navy); padding:2px 7px; border-radius:5px; }
+  .pill{ display:inline-flex; align-items:center; padding:3px 9px; border-radius:99px; font-size:11.5px; font-weight:600; }
+  .pill.strong,.pill.kol{ background:var(--green-100); color:var(--green); }
+  .pill.active,.pill.high{ background:var(--cyan-100); color:var(--cyan-700); }
+  .pill.developing,.pill.medium{ background:var(--amber-100); color:var(--amber); }
+  .pill.inactive,.pill.low{ background:var(--red-100); color:var(--red); }
+  .pill.new,.pill.newprospect,.pill.prospect{ background:var(--purple-100); color:var(--purple); }
+  .row-actions{ display:flex; gap:6px; }
+  .filters{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; }
+  select, input[type=text], input[type=search], input[type=tel], input[type=email], input[type=date], input[type=number], input[type=password], textarea{
+    font-family:'Inter',sans-serif; font-size:13px; padding:8px 10px; border-radius:8px; border:1px solid var(--line); background:#fff; color:var(--ink);
+  }
+  select:focus, input:focus, textarea:focus{ outline:2px solid var(--cyan); outline-offset:1px; }
+  .search-box{ min-width:220px; flex:1; }
+
+  .empty{ text-align:center; padding:50px 20px; color:var(--muted); }
+  .empty .big{ font-size:32px; margin-bottom:6px; }
+
+  .modal-bg{ position:fixed; inset:0; background:rgba(23,27,46,0.5); backdrop-filter:blur(2px); display:none; align-items:flex-start; justify-content:center; z-index:100; overflow-y:auto; padding:40px 16px; }
+  .modal-bg.show{ display:flex; }
+  .modal{ background:#fff; border-radius:16px; width:100%; max-width:660px; box-shadow:0 20px 60px rgba(23,27,46,.3); animation:pop .15s ease-out; border-top:4px solid var(--cyan);}
+  @keyframes pop{ from{ transform:translateY(6px); opacity:0;} to{ transform:translateY(0); opacity:1;} }
+  .modal-head{ display:flex; align-items:center; justify-content:space-between; padding:20px 22px 14px; border-bottom:1px solid var(--line); }
+  .modal-head h3{ margin:0; font-size:18px; color:var(--navy-900);}
+  .modal-close{ cursor:pointer; border:none; background:none; font-size:18px; color:var(--muted); padding:4px 8px; }
+  .modal-body{ padding:18px 22px 6px; }
+  .modal-foot{ padding:14px 22px 20px; display:flex; justify-content:space-between; align-items:center; gap:10px; }
+  .form-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px 14px; }
+  .field.span2{ grid-column:1/-1; }
+  .field label{ display:block; font-size:11.5px; font-weight:600; color:var(--muted); margin-bottom:5px; text-transform:uppercase; letter-spacing:.04em;}
+  .field select, .field input, .field textarea{ width:100%; }
+  .field textarea{ resize:vertical; min-height:60px; }
+  .section-tag{ grid-column:1/-1; font-size:11.5px; font-weight:700; color:var(--navy); text-transform:uppercase; letter-spacing:.06em; border-top:1px solid var(--line); padding-top:12px; margin-top:2px;}
+  .form-err{ color:var(--red); font-size:12.5px; }
+
+  /* ---------- Login ---------- */
+  .login-screen{ position:fixed; inset:0; background:linear-gradient(160deg, var(--navy-900), var(--navy) 55%, #191C4A); display:flex; align-items:center; justify-content:center; z-index:500; padding:20px; }
+  .login-card{ background:#fff; border-radius:20px; width:100%; max-width:400px; padding:34px 32px 28px; box-shadow:0 24px 70px rgba(0,0,0,.4); text-align:center;}
+  .login-logo{ width:72px; height:72px; margin:0 auto 14px; }
+  .login-logo img{ width:100%; height:100%; object-fit:contain;}
+  .login-card h2{ margin:0 0 4px; font-size:20px; color:var(--navy-900);}
+  .login-card .desc{ color:var(--muted); font-size:13px; margin-bottom:20px; }
+  .login-card input{ width:100%; margin-bottom:10px; text-align:left; }
+  .login-error{ color:var(--red); font-size:12.5px; min-height:16px; margin-bottom:4px;}
+  .login-hint{ font-size:11.5px; color:var(--muted); margin-top:16px; line-height:1.5; }
+  .login-divider{ display:flex; align-items:center; gap:12px; margin:18px 0; }
+  .login-divider::before, .login-divider::after{ content:''; flex:1; height:1px; background:var(--line); }
+  .login-divider span{ font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; }
+  .btn-google{ display:flex; align-items:center; justify-content:center; gap:10px; width:100%; padding:10px 16px; border-radius:9px; border:1px solid var(--line); background:var(--paper); color:var(--ink); font-size:13.5px; font-weight:600; cursor:pointer; transition:box-shadow .15s ease; }
+  .btn-google:hover{ box-shadow:var(--shadow); }
+  .btn-google:active{ transform:scale(.98); }
+  .btn-google img{ width:18px; height:18px; }
+
+  .google-modal-bg{ position:fixed; inset:0; background:rgba(23,27,46,.55); backdrop-filter:blur(2px); display:none; align-items:center; justify-content:center; z-index:600; }
+  .google-modal-bg.show{ display:flex; }
+  .google-modal{ background:#fff; border-radius:16px; width:100%; max-width:420px; box-shadow:0 20px 60px rgba(23,27,46,.35); padding:32px 28px 24px; text-align:center; animation:pop .15s ease-out; }
+  .google-modal .g-logo{ width:48px; height:48px; margin:0 auto 14px; }
+  .google-modal h3{ font-family:'Inter',sans-serif; font-weight:600; font-size:18px; margin:0 0 4px; color:var(--ink); }
+  .google-modal .g-sub{ font-size:13px; color:var(--muted); margin-bottom:18px; line-height:1.4; }
+  .google-modal input{ width:100%; text-align:left; margin-bottom:10px; font-size:14px; padding:10px 12px; }
+  .google-modal .g-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:6px; }
+
+  /* Admin content */
+  .cred-box{ background:var(--navy-900); color:#ECEDFB; border-radius:12px; padding:16px 18px; font-family:'IBM Plex Mono',monospace; font-size:13px; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; border-left:4px solid var(--cyan);}
+  .cred-box .cred-line{ display:flex; gap:8px; align-items:center; }
+  .cred-box .tag{ color:var(--cyan); }
+  .toast{ position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(10px); opacity:0; background:var(--navy-900); color:#ECEDFB; padding:11px 20px; border-radius:10px; font-size:13px; font-weight:500; box-shadow:0 10px 30px rgba(0,0,0,.25); z-index:300; transition:all .25s ease; pointer-events:none; border-left:3px solid var(--cyan);}
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+  .toast.err{ border-left-color:var(--red); }
+
+  .banner{ background:var(--cyan-100); border:1px solid var(--cyan); color:var(--navy-900); border-radius:10px; padding:12px 16px; font-size:12.5px; margin-bottom:20px; }
+
+  ::-webkit-scrollbar{ width:10px; height:10px; }
+  ::-webkit-scrollbar-thumb{ background:#C7CAEE; border-radius:8px; }
+
+  @media (max-width:820px){
+    .sidebar{ display:none; }
+    .main{ padding:22px 16px 60px; }
+    .form-grid{ grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo"><img src="data:image/png;base64,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" alt="AKIJ Mediplex"></div>
+    <h2>HPO Field CRM</h2>
+    <div class="desc">Sign in with your assigned username and password</div>
+    <input type="text" id="loginUser" placeholder="Username" autocomplete="username">
+    <input type="password" id="loginPass" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')tryLogin()">
+    <div class="login-error" id="loginError"></div>
+    <button class="btn btn-primary" style="width:100%; justify-content:center;" onclick="tryLogin()">Sign in</button>
+    <div class="login-divider"><span>or</span></div>
+    <button class="btn-google" id="googleBtn" onclick="triggerGoogleLogin()">
+      <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath fill='%23EA4335' d='M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z'/%3E%3Cpath fill='%234285F4' d='M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z'/%3E%3Cpath fill='%23FBBC05' d='M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.93 17.17 0 20.48 0 24s.93 6.83 2.56 9.78l7.97-6.19z'/%3E%3Cpath fill='%2334A853' d='M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z'/%3E%3Cpath fill='none' d='M0 0h48v48H0z'/%3E%3C/svg%3E" alt="">
+      Continue with Google
+    </button>
+    <div class="login-hint">15 HPO accounts and 1 admin account are provisioned. All users share the same live database — data added by anyone is visible to everyone. Contact your Branch/Area Manager if you don't have your credentials.</div>
+  </div>
+</div>
+
+<div class="app" id="appRoot" style="display:none;">
+  <div class="sidebar">
+    <div class="brand">
+      <div class="brand-mark"><img src="data:image/png;base64,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" alt="AKIJ Mediplex"></div>
+      <div>
+        <div class="brand-name">AKIJ Mediplex</div>
+        <div class="brand-sub">HPO Field CRM</div>
+      </div>
+    </div>
+    <div class="who">
+      <div class="name" id="whoName">—</div>
+      <div class="role" id="whoRole">—</div>
+      <button class="btn btn-sm btn-ghost" style="color:#ECEDFB;border-color:rgba(255,255,255,.3)" onclick="logout()">Log out</button>
+    </div>
+    <nav id="nav">
+      <div class="nav-item active" data-view="dashboard"><span class="ic">◆</span> Dashboard</div>
+      <div class="nav-item" data-view="doctors"><span class="ic">⚕</span> Doctors</div>
+      <div class="nav-item" data-view="pharmacies"><span class="ic">✚</span> Pharmacies / Chemists</div>
+      <div class="nav-item" data-view="visits"><span class="ic">◷</span> Due Visits</div>
+      <div class="nav-sep"></div>
+      <div class="nav-item" data-view="export"><span class="ic">⭳</span> Export CSV</div>
+      <div class="nav-item" data-view="admin" id="navAdmin" style="display:none;"><span class="ic">🔒</span> Admin Panel</div>
+    </nav>
+    <div class="sidebar-foot">AKIJ Mediplex Ltd.<br>v2.0 · Phase 1</div>
+  </div>
+
+  <div class="main">
+
+    <!-- DASHBOARD -->
+    <section id="view-dashboard">
+      <div class="topbar">
+        <div>
+          <h1>Field Overview</h1>
+          <div class="sub" id="dashSub">Live snapshot of doctor &amp; pharmacy coverage</div>
+        </div>
+        <div class="actions">
+          <button class="btn btn-ghost" onclick="go('doctors')">+ New Doctor</button>
+          <button class="btn btn-primary" onclick="go('pharmacies')">+ New Pharmacy</button>
+        </div>
+      </div>
+      <div class="grid-kpi" id="kpiGrid"></div>
+      <div class="grid-2">
+        <div class="panel">
+          <h2>Total Selling Amount Gap — Doctors</h2>
+          <div class="desc">Current vs. potential direct selling amount (৳)</div>
+          <div id="gapDoctorSell"></div>
+        </div>
+        <div class="panel">
+          <h2>Referral Amount Gap — Doctors</h2>
+          <div class="desc">Current vs. potential referral amount (৳)</div>
+          <div id="gapDoctorRef"></div>
+        </div>
+        <div class="panel">
+          <h2>Total Selling Amount Gap — Pharmacies</h2>
+          <div class="desc">Current vs. potential monthly selling amount (৳)</div>
+          <div id="gapPharmaSell"></div>
+        </div>
+        <div class="panel">
+          <h2>Referral Amount Gap — Pharmacies</h2>
+          <div class="desc">Current vs. potential referral amount (৳)</div>
+          <div id="gapPharmaRef"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DOCTORS -->
+    <section id="view-doctors" style="display:none;">
+      <div class="topbar">
+        <div><h1>Doctor Master</h1><div class="sub">Specialty-wise potential, referral tracking &amp; visit planning</div></div>
+        <div class="actions"><button class="btn btn-primary" onclick="openDoctorModal()">+ Add Doctor</button></div>
+      </div>
+      <div class="panel">
+        <div class="filters">
+          <input class="search-box" type="search" id="docSearch" placeholder="Search by name, hospital, territory…" oninput="renderDoctors()">
+          <select id="docCategoryFilter" onchange="renderDoctors()"><option value="">All categories</option><option>KOL</option><option>High Potential</option><option>Medium Potential</option><option>Low Potential</option><option>New Prospect</option></select>
+          <select id="docRelFilter" onchange="renderDoctors()"><option value="">All relationship status</option><option>Strong</option><option>Active</option><option>Developing</option><option>Inactive</option></select>
+        </div>
+        <div class="table-wrap"><table id="doctorTable"></table></div>
+      </div>
+    </section>
+
+    <!-- PHARMACIES -->
+    <section id="view-pharmacies" style="display:none;">
+      <div class="topbar">
+        <div><h1>Pharmacy / Chemist Master</h1><div class="sub">Outlet classification, sales potential &amp; onboarding status</div></div>
+        <div class="actions"><button class="btn btn-primary" onclick="openPharmaModal()">+ Add Pharmacy</button></div>
+      </div>
+      <div class="panel">
+        <div class="filters">
+          <input class="search-box" type="search" id="phSearch" placeholder="Search by name, owner, territory…" oninput="renderPharma()">
+          <select id="phTypeFilter" onchange="renderPharma()"><option value="">All types</option><option>Retail Pharmacy</option><option>Hospital Pharmacy</option><option>Diagnostic-linked Pharmacy</option><option>Chemist</option></select>
+          <select id="phOnboardFilter" onchange="renderPharma()"><option value="">All onboarding status</option><option>Existing</option><option>New</option><option>Prospect</option><option>On Hold</option></select>
+        </div>
+        <div class="table-wrap"><table id="pharmaTable"></table></div>
+      </div>
+    </section>
+
+    <!-- DUE VISITS -->
+    <section id="view-visits" style="display:none;">
+      <div class="topbar"><div><h1>Due &amp; Overdue Visits</h1><div class="sub">Every customer whose next visit date has arrived or passed</div></div></div>
+      <div class="panel"><div class="table-wrap"><table id="visitsTable"></table></div></div>
+    </section>
+
+    <!-- EXPORT -->
+    <section id="view-export" style="display:none;">
+      <div class="topbar"><div><h1>Export Data</h1><div class="sub">Download the customer master as CSV</div></div></div>
+      <div class="grid-2">
+        <div class="panel"><h2>Doctor Master (CSV)</h2><div class="desc"><span id="docCountLabel">0</span> records</div><button class="btn btn-cyan" onclick="exportCSV('doctors')">⭳ Download doctors.csv</button><p style="height:14px"></p></div>
+        <div class="panel"><h2>Pharmacy / Chemist Master (CSV)</h2><div class="desc"><span id="phCountLabel">0</span> records</div><button class="btn btn-cyan" onclick="exportCSV('pharmacies')">⭳ Download pharmacies.csv</button><p style="height:14px"></p></div>
+      </div>
+      <div class="panel"><h2>Combined Export</h2><div class="desc">Both datasets in one CSV, with a type column</div><button class="btn btn-ghost" onclick="exportCSV('combined')">⭳ Download akij-mediplex-crm-export.csv</button><p style="height:14px"></p></div>
+    </section>
+
+    <!-- ADMIN -->
+    <section id="view-admin" style="display:none;">
+      <div class="topbar"><div><h1>Admin Panel</h1><div class="sub">Data governance, HPO access &amp; credential management</div></div></div>
+
+      <div class="banner">This CRM stores data on a shared server — all users see and modify the same live database. Treat these credentials as internal-use only, and rotate them before handling sensitive real patient data long-term.</div>
+
+      <div class="panel">
+        <h2>Admin credentials</h2>
+        <div class="desc">Keep these private. Anyone with this password can edit or delete master data.</div>
+        <div class="cred-box">
+          <div class="cred-line"><span class="tag">username</span> <strong id="adminUserDisplay">—</strong></div>
+          <div class="cred-line"><span class="tag">password</span> <strong id="adminPassDisplay">—</strong></div>
+          <button class="btn btn-sm btn-ghost" style="color:#ECEDFB;border-color:rgba(255,255,255,.3)" onclick="copyText(accounts.admin.username+' / '+accounts.admin.password,'Admin credential copied')">Copy</button>
+        </div>
+        <div style="margin-top:14px; display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
+          <div class="field" style="min-width:260px;"><label>Admin Google email (for Google sign-in)</label><input type="email" id="adminGoogleEmail" placeholder="admin@example.com"></div>
+          <button class="btn btn-sm btn-ghost" onclick="saveAdminEmail()">Save email</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>HPO User Accounts (<span id="hpoCount">0</span>)</h2>
+        <div class="desc">Generate a login for a new Hospital Promotion Officer, or view/copy an existing one</div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; margin-bottom:16px;">
+          <div class="field" style="min-width:220px;"><label>Full name</label><input type="text" id="newHpoName" placeholder="e.g. Tanvir Ahmed"></div>
+          <div class="field" style="min-width:160px;"><label>Territory</label><input type="text" id="newHpoTerritory" placeholder="e.g. Mirpur"></div>
+          <div class="field" style="min-width:220px;"><label>Google email (optional)</label><input type="email" id="newHpoEmail" placeholder="name@gmail.com"></div>
+          <button class="btn btn-primary" onclick="generateHpoCredential()">Generate credential</button>
+        </div>
+        <div class="table-wrap"><table id="hpoTable"></table></div>
+      </div>
+
+      <div class="panel">
+        <h2>Master Data Control</h2>
+        <div class="desc">Admin-only actions on the full customer database</div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="btn btn-ghost" onclick="exportCSV('combined')">⭳ Export full database</button>
+          <button class="btn btn-danger" onclick="resetDemoData()">Reset to sample data</button>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<!-- DOCTOR MODAL -->
+<div class="modal-bg" id="doctorModalBg">
+  <div class="modal">
+    <div class="modal-head"><h3 id="doctorModalTitle">Add Doctor</h3><button class="modal-close" onclick="closeModal('doctorModalBg')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="field" id="f_d_name"><label>Doctor's name<span class="req">*</span></label><input type="text" id="d_name" placeholder="Dr. Rafiqul Islam"></div>
+        <div class="field" id="f_d_specialty"><label>Specialty<span class="req">*</span></label><input type="text" id="d_specialty" placeholder="Cardiology"></div>
+        <div class="field" id="f_d_designation"><label>Designation<span class="req">*</span></label><input type="text" id="d_designation" placeholder="Consultant"></div>
+        <div class="field" id="f_d_hospital"><label>Hospital / Chamber<span class="req">*</span></label><input type="text" id="d_hospital" placeholder="AKIJ Mediplex"></div>
+        <div class="field" id="f_d_department"><label>Department<span class="req">*</span></label><input type="text" id="d_department" placeholder="Cardiology"></div>
+        <div class="field" id="f_d_mobile"><label>Mobile<span class="req">*</span></label><input type="tel" id="d_mobile" placeholder="017XXXXXXXX"></div>
+        <div class="field" id="f_d_email"><label>Email<span class="req">*</span></label><input type="email" id="d_email" placeholder="name@example.com"></div>
+        <div class="field" id="f_d_territory"><label>Territory<span class="req">*</span></label><input type="text" id="d_territory" placeholder="Dhanmondi"></div>
+        <div class="field span2" id="f_d_address"><label>Chamber location / address<span class="req">*</span></label><input type="text" id="d_address"></div>
+        <div class="field" id="f_d_category"><label>Doctor category<span class="req">*</span></label><select id="d_category"><option>New Prospect</option><option>Low Potential</option><option>Medium Potential</option><option>High Potential</option><option>KOL</option></select></div>
+        <div class="field" id="f_d_footfall"><label>Patient footfall / day<span class="req">*</span></label><input type="number" id="d_footfall" placeholder="30"></div>
+
+        <div class="section-tag">Total Selling Amount (৳)</div>
+        <div class="field" id="f_d_sellcur"><label>Current selling amount<span class="req">*</span></label><input type="number" id="d_sellcur" placeholder="60000"></div>
+        <div class="field" id="f_d_sellpot"><label>Potential selling amount<span class="req">*</span></label><input type="number" id="d_sellpot" placeholder="120000"></div>
+
+        <div class="section-tag">Referral Amount (৳) — tracked separately from selling amount</div>
+        <div class="field" id="f_d_refamtcur"><label>Current referral amount<span class="req">*</span></label><input type="number" id="d_refamtcur" placeholder="25000"></div>
+        <div class="field" id="f_d_refamtpot"><label>Potential referral amount<span class="req">*</span></label><input type="number" id="d_refamtpot" placeholder="55000"></div>
+
+        <div class="field" id="f_d_service"><label>Key service / test interest<span class="req">*</span></label><input type="text" id="d_service" placeholder="Echocardiogram"></div>
+        <div class="field" id="f_d_contacttime"><label>Preferred contact time<span class="req">*</span></label><input type="text" id="d_contacttime" placeholder="After 5 PM"></div>
+        <div class="field" id="f_d_hpo"><label>HPO assigned<span class="req">*</span></label><select id="d_hpo"></select></div>
+        <div class="field" id="f_d_frequency"><label>Visit frequency<span class="req">*</span></label><select id="d_frequency"><option>Weekly</option><option>2–3 Times/Week</option><option>Biweekly</option><option>Monthly</option><option>Daily</option></select></div>
+        <div class="field" id="f_d_lastvisit"><label>Last visit date<span class="req">*</span></label><input type="date" id="d_lastvisit"></div>
+        <div class="field" id="f_d_nextvisit"><label>Next visit date<span class="req">*</span></label><input type="date" id="d_nextvisit"></div>
+        <div class="field" id="f_d_relstatus"><label>Relationship status<span class="req">*</span></label><select id="d_relstatus"><option>Developing</option><option>Strong</option><option>Active</option><option>Inactive</option></select></div>
+        <div class="field" id="f_d_engagement"><label>Engagement / referral status<span class="req">*</span></label><select id="d_engagement"><option>Existing</option><option>New Prospect</option></select></div>
+        <div class="field span2"><label>Remarks <span style="text-transform:none; font-weight:400;">(optional)</span></label><textarea id="d_remarks"></textarea></div>
+      </div>
+      <div class="form-err" id="doctorFormErr"></div>
+    </div>
+    <div class="modal-foot">
+      <span style="font-size:11.5px;color:var(--muted);"><span class="req">*</span> required field</span>
+      <div style="display:flex; gap:10px;"><button class="btn btn-ghost" onclick="closeModal('doctorModalBg')">Cancel</button><button class="btn btn-primary" onclick="saveDoctor()">Save doctor</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- PHARMACY MODAL -->
+<div class="modal-bg" id="pharmaModalBg">
+  <div class="modal">
+    <div class="modal-head"><h3 id="pharmaModalTitle">Add Pharmacy / Chemist</h3><button class="modal-close" onclick="closeModal('pharmaModalBg')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="field" id="f_p_name"><label>Pharmacy / chemist name<span class="req">*</span></label><input type="text" id="p_name" placeholder="Green Life Pharmacy"></div>
+        <div class="field" id="f_p_owner"><label>Owner / proprietor<span class="req">*</span></label><input type="text" id="p_owner"></div>
+        <div class="field" id="f_p_contact"><label>Contact person<span class="req">*</span></label><input type="text" id="p_contact"></div>
+        <div class="field" id="f_p_mobile"><label>Mobile<span class="req">*</span></label><input type="tel" id="p_mobile" placeholder="017XXXXXXXX"></div>
+        <div class="field span2" id="f_p_address"><label>Address<span class="req">*</span></label><input type="text" id="p_address"></div>
+        <div class="field" id="f_p_territory"><label>Area / territory<span class="req">*</span></label><input type="text" id="p_territory"></div>
+        <div class="field" id="f_p_type"><label>Customer type<span class="req">*</span></label><select id="p_type"><option>Retail Pharmacy</option><option>Hospital Pharmacy</option><option>Diagnostic-linked Pharmacy</option><option>Chemist</option></select></div>
+        <div class="field" id="f_p_class"><label>Outlet class<span class="req">*</span></label><select id="p_class"><option>A</option><option>B</option><option>C</option><option>New</option></select></div>
+        <div class="field" id="f_p_license"><label>License / registration no.<span class="req">*</span></label><input type="text" id="p_license"></div>
+        <div class="field" id="f_p_linked"><label>Linked hospital / doctor<span class="req">*</span></label><input type="text" id="p_linked"></div>
+
+        <div class="section-tag">Total Selling Amount (৳)</div>
+        <div class="field" id="f_p_sellcur"><label>Current monthly selling amount<span class="req">*</span></label><input type="number" id="p_sellcur" placeholder="45000"></div>
+        <div class="field" id="f_p_sellpot"><label>Potential monthly selling amount<span class="req">*</span></label><input type="number" id="p_sellpot" placeholder="80000"></div>
+
+        <div class="section-tag">Referral Amount (৳) — tracked separately from selling amount</div>
+        <div class="field" id="f_p_refamtcur"><label>Current referral amount<span class="req">*</span></label><input type="number" id="p_refamtcur" placeholder="10000"></div>
+        <div class="field" id="f_p_refamtpot"><label>Potential referral amount<span class="req">*</span></label><input type="number" id="p_refamtpot" placeholder="22000"></div>
+
+        <div class="field span2" id="f_p_interest"><label>Primary product / service interest<span class="req">*</span></label><input type="text" id="p_interest"></div>
+        <div class="field" id="f_p_hpo"><label>HPO assigned<span class="req">*</span></label><select id="p_hpo"></select></div>
+        <div class="field" id="f_p_frequency"><label>Visit frequency<span class="req">*</span></label><select id="p_frequency"><option>Weekly</option><option>2–3 Times/Week</option><option>Biweekly</option><option>Monthly</option><option>Daily</option></select></div>
+        <div class="field" id="f_p_lastvisit"><label>Last visit date<span class="req">*</span></label><input type="date" id="p_lastvisit"></div>
+        <div class="field" id="f_p_nextvisit"><label>Next visit date<span class="req">*</span></label><input type="date" id="p_nextvisit"></div>
+        <div class="field" id="f_p_relstatus"><label>Relationship status<span class="req">*</span></label><select id="p_relstatus"><option>Developing</option><option>Strong</option><option>Active</option><option>Inactive</option></select></div>
+        <div class="field" id="f_p_onboard"><label>Onboarding status<span class="req">*</span></label><select id="p_onboard"><option>New</option><option>Existing</option><option>Prospect</option><option>On Hold</option></select></div>
+        <div class="field span2"><label>Remarks <span style="text-transform:none; font-weight:400;">(optional)</span></label><textarea id="p_remarks"></textarea></div>
+      </div>
+      <div class="form-err" id="pharmaFormErr"></div>
+    </div>
+    <div class="modal-foot">
+      <span style="font-size:11.5px;color:var(--muted);"><span class="req">*</span> required field</span>
+      <div style="display:flex; gap:10px;"><button class="btn btn-ghost" onclick="closeModal('pharmaModalBg')">Cancel</button><button class="btn btn-primary" onclick="savePharma()">Save pharmacy</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- GOOGLE LOGIN MODAL -->
+<div class="google-modal-bg" id="googleModalBg">
+  <div class="google-modal">
+    <div class="g-logo"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath fill='%23EA4335' d='M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z'/%3E%3Cpath fill='%234285F4' d='M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z'/%3E%3Cpath fill='%23FBBC05' d='M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.93 17.17 0 20.48 0 24s.93 6.83 2.56 9.78l7.97-6.19z'/%3E%3Cpath fill='%2334A853' d='M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z'/%3E%3C/svg%3E" alt=""></div>
+    <h3>Sign in with Google</h3>
+    <div class="g-sub">Enter the Google email linked to your CRM account</div>
+    <input type="email" id="googleEmailInput" placeholder="name@gmail.com" onkeydown="if(event.key==='Enter')submitGoogleLogin()">
+    <div class="login-error" id="googleLoginError"></div>
+    <div class="g-actions">
+      <button class="btn btn-ghost btn-sm" onclick="closeGoogleModal()">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="submitGoogleLogin()">Continue</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ================= STORAGE KEYS ================= */
+const K_DOCTORS = 'akij-crm-doctors-v2';
+const K_PHARMA  = 'akij-crm-pharmacies-v2';
+const K_ACCOUNTS = 'akij-crm-accounts-v2';
+const API_MAP = {
+  [K_DOCTORS]: '/api/doctors',
+  [K_PHARMA]: '/api/pharmacies',
+  [K_ACCOUNTS]: '/api/accounts',
+};
+
+let doctors = [];
+let pharmacies = [];
+let accounts = null; // { admin:{username,password}, hpos:[{name,territory,username,password}] }
+let currentUser = null; // {role:'admin'|'hpo', name, username, territory}
+let editingDoctorId = null;
+let editingPharmaId = null;
+let doctorSeq = 1;
+let pharmaSeq = 1;
+
+function todayPlus(days){ const d = new Date(); d.setDate(d.getDate()+days); return d.toISOString().slice(0,10); }
+function todayMinus(days){ return todayPlus(-days); }
+
+/* ================= SEED DATA ================= */
+function seedAccounts(){
+  return {
+    admin: { username:'admin', password:'uHoHKubDKpPK', email:'' },
+    hpos: [
+      {name:"Tanvir Ahmed",   territory:"Mirpur",       username:"tanvir.ahmed",    password:"nB7Kw4P7RB"},
+      {name:"Sadia Rahman",   territory:"Dhanmondi",    username:"sadia.rahman",    password:"kfMMvy5UG3"},
+      {name:"Imran Kabir",    territory:"Uttara",       username:"imran.kabir",     password:"sf8xq4DfZh"},
+      {name:"Nusrat Jahan",   territory:"Gulshan",      username:"nusrat.jahan",    password:"ECmu8kDL2v"},
+      {name:"Mahfuzur Rahman",territory:"Mohammadpur",  username:"mahfuzur.rahman", password:"DtTPuice9b"},
+      {name:"Farhana Akter",  territory:"Banani",       username:"farhana.akter",   password:"UYmxxtU6hQ"},
+      {name:"Shakil Ahmed",   territory:"Bashundhara",  username:"shakil.ahmed",    password:"7Lr5GyFhzU"},
+      {name:"Ruma Begum",     territory:"Motijheel",    username:"ruma.begum",      password:"e8Cvc2fLPR"},
+      {name:"Kamrul Hasan",   territory:"Farmgate",     username:"kamrul.hasan",    password:"MhraPmbYMp"},
+      {name:"Taslima Khatun", territory:"Wari",         username:"taslima.khatun",  password:"7m65WMdiqu"},
+      {name:"Jubayer Islam",  territory:"Khilgaon",     username:"jubayer.islam",   password:"CyzpPK3cNH"},
+      {name:"Sharmin Sultana",territory:"Rampura",      username:"sharmin.sultana", password:"dhLzG7uqvF"},
+      {name:"Abdul Mannan",   territory:"Tejgaon",      username:"abdul.mannan",    password:"uyYi4EiQNj"},
+      {name:"Rima Akter",     territory:"Savar",        username:"rima.akter",      password:"PENTxMbTaG"},
+      {name:"Zahidul Islam",  territory:"Narayanganj",  username:"zahidul.islam",   password:"bHXkGBBpnU"},
+    ]
+  };
+}
+function seedDoctors(){
+  return [
+    {id:'DOC-DHK-00001', name:"Dr. Rafiqul Islam", specialty:"Cardiology", designation:"Consultant", hospital:"AKIJ Mediplex", department:"Cardiology", mobile:"01711223344", email:"rafiqul.islam@example.com", address:"Chamber 4, AKIJ Mediplex, Mirpur", territory:"Mirpur", category:"KOL", footfall:45, sellcur:90000, sellpot:150000, refamtcur:38000, refamtpot:70000, service:"Echocardiogram", contacttime:"After 6 PM", hpo:"Tanvir Ahmed", frequency:"Weekly", lastvisit:todayMinus(4), nextvisit:todayMinus(1), relstatus:"Strong", engagement:"Existing", remarks:"Refers most cardiac cases to us."},
+    {id:'DOC-DHK-00002', name:"Dr. Nasima Chowdhury", specialty:"Gynecology", designation:"Senior Consultant", hospital:"AKIJ Mediplex", department:"OBGYN", mobile:"01812345678", email:"nasima.c@example.com", address:"Chamber 12, Dhanmondi", territory:"Dhanmondi", category:"High Potential", footfall:32, sellcur:58000, sellpot:110000, refamtcur:20000, refamtpot:40000, service:"4D Ultrasound", contacttime:"11 AM–1 PM", hpo:"Sadia Rahman", frequency:"Biweekly", lastvisit:todayMinus(9), nextvisit:todayMinus(2), relstatus:"Active", engagement:"Existing", remarks:"Interested in antenatal package pricing."},
+    {id:'DOC-DHK-00003', name:"Dr. Kamal Hossain", specialty:"Orthopedics", designation:"Consultant", hospital:"City General Hospital", department:"Orthopedics", mobile:"01911998877", email:"kamal.h@example.com", address:"Room 7, City General", territory:"Uttara", category:"Medium Potential", footfall:20, sellcur:26000, sellpot:70000, refamtcur:9000, refamtpot:25000, service:"MRI referrals", contacttime:"Evenings", hpo:"Imran Kabir", frequency:"Monthly", lastvisit:todayMinus(20), nextvisit:todayPlus(4), relstatus:"Developing", engagement:"Existing", remarks:""},
+    {id:'DOC-DHK-00004', name:"Dr. Farzana Yasmin", specialty:"Pediatrics", designation:"Consultant", hospital:"AKIJ Mediplex", department:"Pediatrics", mobile:"01611002233", email:"farzana.y@example.com", address:"Chamber 2, AKIJ Mediplex", territory:"Gulshan", category:"New Prospect", footfall:15, sellcur:4000, sellpot:40000, refamtcur:1500, refamtpot:15000, service:"Vaccination panel", contacttime:"Mornings", hpo:"Nusrat Jahan", frequency:"Weekly", lastvisit:todayMinus(2), nextvisit:todayPlus(5), relstatus:"Developing", engagement:"New Prospect", remarks:"Newly joined; first meeting went well."},
+    {id:'DOC-DHK-00005', name:"Dr. Shafiqul Alam", specialty:"Nephrology", designation:"Consultant", hospital:"AKIJ Mediplex", department:"Nephrology", mobile:"01755667788", email:"shafiqul.a@example.com", address:"Chamber 9, AKIJ Mediplex", territory:"Mohammadpur", category:"Low Potential", footfall:10, sellcur:9000, sellpot:35000, refamtcur:3000, refamtpot:12000, service:"Dialysis referral", contacttime:"Afternoons", hpo:"Mahfuzur Rahman", frequency:"Monthly", lastvisit:todayMinus(35), nextvisit:todayMinus(6), relstatus:"Inactive", engagement:"Existing", remarks:"Needs reactivation visit."},
+  ];
+}
+function seedPharmacies(){
+  return [
+    {id:'PHA-DHK-00001', name:"Green Life Pharmacy", owner:"Md. Aminul Haque", contact:"Aminul Haque", mobile:"01722334455", address:"Road 5, Mirpur 10", territory:"Mirpur", type:"Retail Pharmacy", cls:"A", license:"DGDA-11234", linked:"AKIJ Mediplex", sellcur:61000, sellpot:90000, refamtcur:12000, refamtpot:20000, interest:"Cardiac & diabetes range", hpo:"Tanvir Ahmed", frequency:"Weekly", lastvisit:todayMinus(3), nextvisit:todayMinus(1), relstatus:"Strong", onboard:"Existing", remarks:"Best-performing outlet in territory."},
+    {id:'PHA-DHK-00002', name:"Popular Chemist", owner:"Shirin Akter", contact:"Shirin Akter", mobile:"01833445566", address:"Satmasjid Road, Dhanmondi", territory:"Dhanmondi", type:"Chemist", cls:"B", license:"DGDA-22987", linked:"AKIJ Mediplex", sellcur:30000, sellpot:55000, refamtcur:6000, refamtpot:14000, interest:"OTC & maternal care", hpo:"Sadia Rahman", frequency:"Biweekly", lastvisit:todayMinus(12), nextvisit:todayPlus(2), relstatus:"Active", onboard:"Existing", remarks:""},
+    {id:'PHA-DHK-00003', name:"City Diagnostic Pharmacy", owner:"Rezaul Karim", contact:"Rezaul Karim", mobile:"01944556677", address:"Sector 7, Uttara", territory:"Uttara", type:"Diagnostic-linked Pharmacy", cls:"A", license:"DGDA-30045", linked:"City General Hospital", sellcur:52000, sellpot:120000, refamtcur:9000, refamtpot:32000, interest:"Diagnostic reagents", hpo:"Imran Kabir", frequency:"Weekly", lastvisit:todayMinus(25), nextvisit:todayMinus(4), relstatus:"Developing", onboard:"Existing", remarks:"Large gap — priority follow-up."},
+    {id:'PHA-DHK-00004', name:"Al-Amin Chemist", owner:"Md. Al-Amin", contact:"Al-Amin", mobile:"01655667788", address:"Mirpur 1", territory:"Mirpur", type:"Chemist", cls:"C", license:"DGDA-40098", linked:"AKIJ Mediplex", sellcur:6000, sellpot:25000, refamtcur:1200, refamtpot:6000, interest:"General OTC", hpo:"Tanvir Ahmed", frequency:"Monthly", lastvisit:todayMinus(2), nextvisit:todayPlus(10), relstatus:"Developing", onboard:"New", remarks:"Onboarded this month."},
+    {id:'PHA-DHK-00005', name:"Wellcare Pharmacy", owner:"Nazma Begum", contact:"Nazma Begum", mobile:"01566778899", address:"Road 27, Dhanmondi", territory:"Dhanmondi", type:"Retail Pharmacy", cls:"New", license:"Pending", linked:"AKIJ Mediplex", sellcur:0, sellpot:40000, refamtcur:0, refamtpot:9000, interest:"Not yet assessed", hpo:"Sadia Rahman", frequency:"Weekly", lastvisit:"", nextvisit:todayPlus(1), relstatus:"Developing", onboard:"Prospect", remarks:"First visit scheduled."},
+  ];
+}
+
+/* ================= PERSISTENCE ================= */
+function lsGet(key){ try{ const v=localStorage.getItem(key); return v ? JSON.parse(v) : null; }catch(e){ return null; } }
+function lsSet(key,value){ try{ localStorage.setItem(key, JSON.stringify(value)); return true; }catch(e){ return false; } }
+
+let serverAvailable = null;
+
+async function serverGet(endpoint){
+  try{
+    const r = await fetch(endpoint);
+    if(!r.ok) return null;
+    const data = await r.json();
+    return data.value ?? null;
+  }catch(e){ return null; }
+}
+
+async function serverSet(endpoint, value){
+  try{
+    const r = await fetch(endpoint, {
+      method: 'PUT',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({value})
+    });
+    return r.ok;
+  }catch(e){ return false; }
+}
+
+async function safeGet(key){
+  const api = API_MAP[key];
+  if(api && serverAvailable !== false){
+    const v = await serverGet(api);
+    if(v !== null){
+      serverAvailable = true;
+      return v;
+    }
+    serverAvailable = false;
+  }
+  return lsGet(key);
+}
+
+async function safeSet(key, value){
+  const api = API_MAP[key];
+  if(api && serverAvailable !== false){
+    try{
+      const ok = await serverSet(api, value);
+      if(ok){
+        serverAvailable = true;
+        lsSet(key, value);
+        return true;
+      }
+    }catch(e){}
+    serverAvailable = false;
+  }
+  lsSet(key, value);
+  return true;
+}
+async function loadAll(){
+  const [dRaw, pRaw, aRaw] = await Promise.all([safeGet(K_DOCTORS), safeGet(K_PHARMA), safeGet(K_ACCOUNTS)]);
+  doctors = dRaw ? JSON.parse(dRaw) : seedDoctors();
+  pharmacies = pRaw ? JSON.parse(pRaw) : seedPharmacies();
+  accounts = aRaw ? JSON.parse(aRaw) : seedAccounts();
+  if(!dRaw) await saveDoctors();
+  if(!pRaw) await savePharmacies();
+  if(!aRaw) await saveAccounts();
+  doctorSeq = doctors.reduce((m,d)=>Math.max(m, parseInt((d.id||'').split('-').pop())||0), 0) + 1;
+  pharmaSeq = pharmacies.reduce((m,p)=>Math.max(m, parseInt((p.id||'').split('-').pop())||0), 0) + 1;
+}
+async function saveDoctors(){ await safeSet(K_DOCTORS, JSON.stringify(doctors)); }
+async function savePharmacies(){ await safeSet(K_PHARMA, JSON.stringify(pharmacies)); }
+async function saveAccounts(){ await safeSet(K_ACCOUNTS, JSON.stringify(accounts)); }
+
+/* ================= LOGIN ================= */
+// Set GOOGLE_CLIENT_ID to enable real Google OAuth (requires Google Cloud project).
+// Without it, "Continue with Google" uses a simulated email-based flow.
+
+function loginAs(user){
+  currentUser = user;
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('appRoot').style.display = 'flex';
+  document.getElementById('whoName').textContent = currentUser.name;
+  document.getElementById('whoRole').textContent = currentUser.role === 'admin' ? 'Administrator' : ('HPO · ' + currentUser.territory);
+  document.getElementById('navAdmin').style.display = currentUser.role === 'admin' ? 'flex' : 'none';
+  go('dashboard');
+}
+
+function triggerGoogleLogin(){
+  const errEl = document.getElementById('loginError');
+  errEl.textContent = '';
+  document.getElementById('googleEmailInput').value = '';
+  document.getElementById('googleLoginError').textContent = '';
+  document.getElementById('googleModalBg').classList.add('show');
+  setTimeout(()=>document.getElementById('googleEmailInput').focus(), 100);
+}
+
+function closeGoogleModal(){
+  document.getElementById('googleModalBg').classList.remove('show');
+}
+
+function submitGoogleLogin(){
+  const email = document.getElementById('googleEmailInput').value.trim().toLowerCase();
+  const errEl = document.getElementById('googleLoginError');
+  if(!email || !email.includes('@')){ errEl.textContent = 'Please enter a valid email address.'; return; }
+  if(!accounts){ errEl.textContent = 'Still loading — please wait.'; return; }
+  if(accounts.admin.email && accounts.admin.email.toLowerCase()===email){
+    closeGoogleModal();
+    loginAs({role:'admin', name:'Administrator', username:accounts.admin.username, territory:'All'});
+    return;
+  }
+  const hpo = accounts.hpos.find(h=>h.email && h.email.toLowerCase()===email);
+  if(hpo){
+    closeGoogleModal();
+    loginAs({role:'hpo', name:hpo.name, username:hpo.username, territory:hpo.territory});
+    return;
+  }
+  errEl.textContent = 'No CRM account is linked to ' + email + '. Add this email to an HPO or admin account in the Admin Panel first.';
+}
+
+async function tryLogin(){
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value;
+  const errEl = document.getElementById('loginError');
+  if(!accounts){ errEl.textContent = 'Still loading — please wait a moment and try again.'; return; }
+  if(u === accounts.admin.username && p === accounts.admin.password){
+    loginAs({role:'admin', name:'Administrator', username:u, territory:'All'});
+  } else {
+    const hpo = accounts.hpos.find(h=>h.username===u && h.password===p);
+    if(hpo) loginAs({role:'hpo', name:hpo.name, username:hpo.username, territory:hpo.territory});
+    else errEl.textContent = 'Incorrect username or password.';
+  }
+}
+function logout(){
+  currentUser = null;
+  document.getElementById('appRoot').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('loginUser').value = '';
+  document.getElementById('loginPass').value = '';
+  document.getElementById('loginError').textContent = '';
+}
+
+/* ================= SCOPED DATA ================= */
+function myDoctors(){ return currentUser.role === 'admin' ? doctors : doctors.filter(d=>d.hpo === currentUser.name); }
+function myPharmacies(){ return currentUser.role === 'admin' ? pharmacies : pharmacies.filter(p=>p.hpo === currentUser.name); }
+
+/* ================= NAV ================= */
+const views = ['dashboard','doctors','pharmacies','visits','export','admin'];
+function go(view){
+  if(view === 'admin' && currentUser.role !== 'admin'){ return; }
+  views.forEach(v=>{ document.getElementById('view-'+v).style.display = (v===view)?'block':'none'; });
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
+  const item = document.querySelector('.nav-item[data-view="'+view+'"]');
+  if(item) item.classList.add('active');
+  if(view==='dashboard') renderDashboard();
+  if(view==='doctors') renderDoctors();
+  if(view==='pharmacies') renderPharma();
+  if(view==='visits') renderVisits();
+  if(view==='export') renderExportCounts();
+  if(view==='admin') renderAdmin();
+}
+document.getElementById('nav').addEventListener('click', (e)=>{
+  const item = e.target.closest('.nav-item');
+  if(item) go(item.dataset.view);
+});
+
+/* ================= TOAST ================= */
+function toast(msg, isErr){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show'); t.classList.toggle('err', !!isErr);
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(()=>t.classList.remove('show'), 2400);
+}
+function copyText(text, msg){
+  navigator.clipboard?.writeText(text).then(()=>toast(msg||'Copied')).catch(()=>toast('Copy failed — select manually', true));
+}
+
+/* ================= HELPERS ================= */
+function escHtml(s){ const d=document.createElement('div'); d.textContent=s??''; return d.innerHTML; }
+function pillClass(status){ return (status||'').toLowerCase().replace(/\s|\//g,''); }
+function isDue(dateStr){ if(!dateStr) return false; return new Date(dateStr) <= new Date(new Date().toDateString()); }
+function fmtMoney(n){ return '৳' + Number(n||0).toLocaleString('en-BD'); }
+function gapPanel(items, curKey, potKey){
+  if(items.length===0) return '<div class="empty">No records yet</div>';
+  return items.map(it=>{
+    const cur = Number(it[curKey]||0), pot = Number(it[potKey]||0);
+    const pct = pot>0 ? Math.round((cur/pot)*100) : 0;
+    const cls = pct<40?'low':(pct<75?'mid':'');
+    return `<div class="gap-row">
+      <div class="gap-name" title="${escHtml(it.name)}">${escHtml(it.name)}</div>
+      <div class="gap-track"><div class="gap-fill ${cls}" style="width:${Math.min(pct,100)}%"></div></div>
+      <div class="gap-pct">${pct}%</div>
+    </div>`;
+  }).join('');
+}
+
+/* ================= DASHBOARD ================= */
+function renderDashboard(){
+  const dList = myDoctors(), pList = myPharmacies();
+  document.getElementById('dashSub').textContent = currentUser.role === 'admin'
+    ? 'Live snapshot across all territories'
+    : `Your assigned portfolio — ${currentUser.territory} territory`;
+
+  const highPotDoc = dList.filter(d=>d.category==='KOL'||d.category==='High Potential').length;
+  const dueVisits = dList.filter(d=>isDue(d.nextvisit)).length + pList.filter(p=>isDue(p.nextvisit)).length;
+  const sellPotSumD = dList.reduce((s,d)=>s+Number(d.sellpot||0),0);
+  const sellCurSumD = dList.reduce((s,d)=>s+Number(d.sellcur||0),0);
+  const sellPotSumP = pList.reduce((s,p)=>s+Number(p.sellpot||0),0);
+  const sellCurSumP = pList.reduce((s,p)=>s+Number(p.sellcur||0),0);
+  const inactive = dList.filter(d=>d.relstatus==='Inactive').length + pList.filter(p=>p.relstatus==='Inactive').length;
+  const prospects = dList.filter(d=>d.category==='New Prospect').length + pList.filter(p=>p.onboard==='Prospect'||p.onboard==='New').length;
+
+  const kpis = [
+    {label:'Total Doctors', value: dList.length, delta:`${highPotDoc} high-potential`, cls:'up'},
+    {label:'Total Pharmacies', value: pList.length, delta:`${pList.filter(p=>p.cls==='A').length} class-A outlets`, cls:'up'},
+    {label:'Due / Overdue Visits', value: dueVisits, delta: dueVisits>0 ? 'needs attention' : 'all on schedule', cls: dueVisits>0?'warn':'up'},
+    {label:'New Prospects', value: prospects, delta:'in onboarding pipeline', cls:''},
+    {label:'Doctor Selling Gap', value: fmtMoney(sellPotSumD-sellCurSumD), delta:`${fmtMoney(sellCurSumD)} of ${fmtMoney(sellPotSumD)} potential`, cls:'warn'},
+    {label:'Pharmacy Selling Gap', value: fmtMoney(sellPotSumP-sellCurSumP), delta:`${fmtMoney(sellCurSumP)} of ${fmtMoney(sellPotSumP)} potential`, cls:'warn'},
+    {label:'Inactive Customers', value: inactive, delta:'flagged for reactivation', cls: inactive>0?'warn':'up'},
+  ];
+  document.getElementById('kpiGrid').innerHTML = kpis.map(k=>`<div class="kpi"><div class="label">${k.label}</div><div class="value">${k.value}</div><div class="delta ${k.cls}">${k.delta}</div></div>`).join('');
+
+  document.getElementById('gapDoctorSell').innerHTML = gapPanel(dList, 'sellcur', 'sellpot');
+  document.getElementById('gapDoctorRef').innerHTML  = gapPanel(dList, 'refamtcur', 'refamtpot');
+  document.getElementById('gapPharmaSell').innerHTML = gapPanel(pList, 'sellcur', 'sellpot');
+  document.getElementById('gapPharmaRef').innerHTML  = gapPanel(pList, 'refamtcur', 'refamtpot');
+}
+
+/* ================= DOCTORS TABLE ================= */
+function renderDoctors(){
+  const q = (document.getElementById('docSearch').value||'').toLowerCase();
+  const cat = document.getElementById('docCategoryFilter').value;
+  const rel = document.getElementById('docRelFilter').value;
+  let rows = myDoctors().filter(d=>{
+    const matchQ = !q || [d.name,d.hospital,d.territory,d.specialty].join(' ').toLowerCase().includes(q);
+    const matchCat = !cat || d.category===cat;
+    const matchRel = !rel || d.relstatus===rel;
+    return matchQ && matchCat && matchRel;
+  });
+  const table = document.getElementById('doctorTable');
+  if(rows.length===0){ table.innerHTML = `<tr><td><div class="empty"><div class="big">🩺</div>No doctors match this filter yet.</div></td></tr>`; return; }
+  table.innerHTML = `
+    <thead><tr><th>ID</th><th>Name</th><th>Specialty</th><th>Territory</th><th>Category</th><th>Selling (cur/pot)</th><th>Referral (cur/pot)</th><th>Next Visit</th><th>Relationship</th><th>HPO</th><th></th></tr></thead>
+    <tbody>${rows.map(d=>`
+      <tr>
+        <td><span class="id-tag">${escHtml(d.id)}</span></td>
+        <td><strong>${escHtml(d.name)}</strong></td>
+        <td>${escHtml(d.specialty)}</td>
+        <td>${escHtml(d.territory)}</td>
+        <td><span class="pill ${pillClass(d.category)}">${escHtml(d.category)}</span></td>
+        <td>${fmtMoney(d.sellcur)} / ${fmtMoney(d.sellpot)}</td>
+        <td>${fmtMoney(d.refamtcur)} / ${fmtMoney(d.refamtpot)}</td>
+        <td>${escHtml(d.nextvisit)||'—'} ${isDue(d.nextvisit)?'<span class="pill low">due</span>':''}</td>
+        <td><span class="pill ${pillClass(d.relstatus)}">${escHtml(d.relstatus)}</span></td>
+        <td>${escHtml(d.hpo)}</td>
+        <td class="row-actions"><button class="btn btn-sm btn-ghost" onclick="openDoctorModal('${escHtml(d.id)}')">Edit</button><button class="btn btn-sm btn-danger" onclick="deleteDoctor('${escHtml(d.id)}')">Delete</button></td>
+      </tr>`).join('')}</tbody>`;
+}
+function populateHpoSelect(selectId, presetName){
+  const sel = document.getElementById(selectId);
+  const names = accounts.hpos.map(h=>h.name);
+  sel.innerHTML = names.map(n=>`<option value="${n}">${n}</option>`).join('');
+  if(currentUser.role !== 'admin'){
+    sel.value = currentUser.name;
+    sel.disabled = true;
+  } else {
+    sel.disabled = false;
+    if(presetName) sel.value = presetName;
+  }
+}
+function clearFieldErrors(prefix){
+  document.querySelectorAll('.field.missing').forEach(el=>{
+    if(el.id.startsWith('f_'+prefix)) el.classList.remove('missing');
+  });
+}
+function openDoctorModal(id){
+  editingDoctorId = id || null;
+  document.getElementById('doctorFormErr').textContent = '';
+  clearFieldErrors('d_');
+  document.getElementById('doctorModalTitle').textContent = id ? 'Edit Doctor' : 'Add Doctor';
+  const f = id ? doctors.find(d=>d.id===id) : {};
+  const set = (key,val)=>{ const el=document.getElementById('d_'+key); if(el) el.value = val ?? ''; };
+  set('name',f.name); set('specialty',f.specialty); set('designation',f.designation); set('hospital',f.hospital);
+  set('department',f.department); set('mobile',f.mobile); set('email',f.email); set('territory',f.territory);
+  set('address',f.address); set('category',f.category||'New Prospect'); set('footfall',f.footfall);
+  set('sellcur',f.sellcur); set('sellpot',f.sellpot); set('refamtcur',f.refamtcur); set('refamtpot',f.refamtpot);
+  set('service',f.service); set('contacttime',f.contacttime); set('frequency',f.frequency||'Weekly'); set('lastvisit',f.lastvisit);
+  set('nextvisit',f.nextvisit); set('relstatus',f.relstatus||'Developing'); set('engagement',f.engagement||'New Prospect'); set('remarks',f.remarks);
+  populateHpoSelect('d_hpo', f.hpo);
+  document.getElementById('doctorModalBg').classList.add('show');
+}
+const DOCTOR_REQUIRED = ['name','specialty','designation','hospital','department','mobile','email','territory','address','category','footfall','sellcur','sellpot','refamtcur','refamtpot','service','contacttime','hpo','frequency','lastvisit','nextvisit','relstatus','engagement'];
+function saveDoctor(){
+  clearFieldErrors('d_');
+  const g = id => document.getElementById(id).value;
+  const missing = DOCTOR_REQUIRED.filter(k => !g('d_'+k) || !String(g('d_'+k)).trim());
+  if(missing.length){
+    missing.forEach(k=>{ const el = document.getElementById('f_d_'+k); if(el) el.classList.add('missing'); });
+    document.getElementById('doctorFormErr').textContent = 'Please fill all required fields marked with *.';
+    toast('Missing required fields', true);
+    return;
+  }
+  const rec = {
+    id: editingDoctorId || ('DOC-DHK-' + String(doctorSeq++).padStart(5,'0')),
+    name:g('d_name'), specialty:g('d_specialty'), designation:g('d_designation'), hospital:g('d_hospital'),
+    department:g('d_department'), mobile:g('d_mobile'), email:g('d_email'), territory:g('d_territory'),
+    address:g('d_address'), category:g('d_category'), footfall:Number(g('d_footfall')||0),
+    sellcur:Number(g('d_sellcur')||0), sellpot:Number(g('d_sellpot')||0),
+    refamtcur:Number(g('d_refamtcur')||0), refamtpot:Number(g('d_refamtpot')||0),
+    service:g('d_service'), contacttime:g('d_contacttime'), hpo:g('d_hpo'), frequency:g('d_frequency'), lastvisit:g('d_lastvisit'),
+    nextvisit:g('d_nextvisit'), relstatus:g('d_relstatus'), engagement:g('d_engagement'), remarks:g('d_remarks'),
+  };
+  if(editingDoctorId){ doctors = doctors.map(d=>d.id===editingDoctorId?rec:d); toast('Doctor updated'); }
+  else { doctors.push(rec); toast('Doctor added — ' + rec.id); }
+  saveDoctors();
+  closeModal('doctorModalBg');
+  renderDoctors(); renderDashboard();
+}
+function deleteDoctor(id){
+  if(!confirm('Delete this doctor record? This cannot be undone.')) return;
+  doctors = doctors.filter(d=>d.id!==id);
+  saveDoctors();
+  renderDoctors(); renderDashboard();
+  toast('Doctor removed');
+}
+
+/* ================= PHARMACY TABLE ================= */
+function renderPharma(){
+  const q = (document.getElementById('phSearch').value||'').toLowerCase();
+  const type = document.getElementById('phTypeFilter').value;
+  const onboard = document.getElementById('phOnboardFilter').value;
+  let rows = myPharmacies().filter(p=>{
+    const matchQ = !q || [p.name,p.owner,p.territory].join(' ').toLowerCase().includes(q);
+    const matchType = !type || p.type===type;
+    const matchOnboard = !onboard || p.onboard===onboard;
+    return matchQ && matchType && matchOnboard;
+  });
+  const table = document.getElementById('pharmaTable');
+  if(rows.length===0){ table.innerHTML = `<tr><td><div class="empty"><div class="big">💊</div>No pharmacies match this filter yet.</div></td></tr>`; return; }
+  table.innerHTML = `
+    <thead><tr><th>ID</th><th>Name</th><th>Type</th><th>Class</th><th>Territory</th><th>Selling (cur/pot)</th><th>Referral (cur/pot)</th><th>Next Visit</th><th>Relationship</th><th>Onboarding</th><th>HPO</th><th></th></tr></thead>
+    <tbody>${rows.map(p=>`
+      <tr>
+        <td><span class="id-tag">${escHtml(p.id)}</span></td>
+        <td><strong>${escHtml(p.name)}</strong></td>
+        <td>${escHtml(p.type)}</td>
+        <td><span class="pill ${p.cls==='A'?'high':(p.cls==='B'?'medium':'low')}">${escHtml(p.cls)}</span></td>
+        <td>${escHtml(p.territory)}</td>
+        <td>${fmtMoney(p.sellcur)} / ${fmtMoney(p.sellpot)}</td>
+        <td>${fmtMoney(p.refamtcur)} / ${fmtMoney(p.refamtpot)}</td>
+        <td>${escHtml(p.nextvisit)||'—'} ${isDue(p.nextvisit)?'<span class="pill low">due</span>':''}</td>
+        <td><span class="pill ${pillClass(p.relstatus)}">${escHtml(p.relstatus)}</span></td>
+        <td><span class="pill ${pillClass(p.onboard)}">${escHtml(p.onboard)}</span></td>
+        <td>${escHtml(p.hpo)}</td>
+        <td class="row-actions"><button class="btn btn-sm btn-ghost" onclick="openPharmaModal('${escHtml(p.id)}')">Edit</button><button class="btn btn-sm btn-danger" onclick="deletePharma('${escHtml(p.id)}')">Delete</button></td>
+      </tr>`).join('')}</tbody>`;
+}
+function openPharmaModal(id){
+  editingPharmaId = id || null;
+  document.getElementById('pharmaFormErr').textContent = '';
+  clearFieldErrors('p_');
+  document.getElementById('pharmaModalTitle').textContent = id ? 'Edit Pharmacy / Chemist' : 'Add Pharmacy / Chemist';
+  const f = id ? pharmacies.find(p=>p.id===id) : {};
+  const set = (key,val)=>{ const el=document.getElementById('p_'+key); if(el) el.value = val ?? ''; };
+  set('name',f.name); set('owner',f.owner); set('contact',f.contact); set('mobile',f.mobile); set('address',f.address);
+  set('territory',f.territory); set('type',f.type||'Retail Pharmacy'); set('class',f.cls||'A'); set('license',f.license);
+  set('linked',f.linked); set('sellcur',f.sellcur); set('sellpot',f.sellpot); set('refamtcur',f.refamtcur); set('refamtpot',f.refamtpot);
+  set('interest',f.interest); set('frequency',f.frequency||'Weekly');
+  set('lastvisit',f.lastvisit); set('nextvisit',f.nextvisit); set('relstatus',f.relstatus||'Developing');
+  set('onboard',f.onboard||'New'); set('remarks',f.remarks);
+  populateHpoSelect('p_hpo', f.hpo);
+  document.getElementById('pharmaModalBg').classList.add('show');
+}
+const PHARMA_REQUIRED = ['name','owner','contact','mobile','address','territory','type','class','license','linked','sellcur','sellpot','refamtcur','refamtpot','interest','hpo','frequency','lastvisit','nextvisit','relstatus','onboard'];
+function savePharma(){
+  clearFieldErrors('p_');
+  const g = id => document.getElementById(id).value;
+  const missing = PHARMA_REQUIRED.filter(k => !g('p_'+k) || !String(g('p_'+k)).trim());
+  if(missing.length){
+    missing.forEach(k=>{ const el = document.getElementById('f_p_'+k); if(el) el.classList.add('missing'); });
+    document.getElementById('pharmaFormErr').textContent = 'Please fill all required fields marked with *.';
+    toast('Missing required fields', true);
+    return;
+  }
+  const rec = {
+    id: editingPharmaId || ('PHA-DHK-' + String(pharmaSeq++).padStart(5,'0')),
+    name:g('p_name'), owner:g('p_owner'), contact:g('p_contact'), mobile:g('p_mobile'), address:g('p_address'),
+    territory:g('p_territory'), type:g('p_type'), cls:g('p_class'), license:g('p_license'), linked:g('p_linked'),
+    sellcur:Number(g('p_sellcur')||0), sellpot:Number(g('p_sellpot')||0),
+    refamtcur:Number(g('p_refamtcur')||0), refamtpot:Number(g('p_refamtpot')||0),
+    interest:g('p_interest'), hpo:g('p_hpo'), frequency:g('p_frequency'),
+    lastvisit:g('p_lastvisit'), nextvisit:g('p_nextvisit'), relstatus:g('p_relstatus'), onboard:g('p_onboard'), remarks:g('p_remarks'),
+  };
+  if(editingPharmaId){ pharmacies = pharmacies.map(p=>p.id===editingPharmaId?rec:p); toast('Pharmacy updated'); }
+  else { pharmacies.push(rec); toast('Pharmacy added — ' + rec.id); }
+  savePharmacies();
+  closeModal('pharmaModalBg');
+  renderPharma(); renderDashboard();
+}
+function deletePharma(id){
+  if(!confirm('Delete this pharmacy record? This cannot be undone.')) return;
+  pharmacies = pharmacies.filter(p=>p.id!==id);
+  savePharmacies();
+  renderPharma(); renderDashboard();
+  toast('Pharmacy removed');
+}
+function closeModal(id){ document.getElementById(id).classList.remove('show'); }
+
+/* ================= DUE VISITS ================= */
+function renderVisits(){
+  const rows = [
+    ...myDoctors().filter(d=>isDue(d.nextvisit)).map(d=>({type:'Doctor', id:d.id, name:d.name, territory:d.territory, hpo:d.hpo, next:d.nextvisit, rel:d.relstatus})),
+    ...myPharmacies().filter(p=>isDue(p.nextvisit)).map(p=>({type:'Pharmacy', id:p.id, name:p.name, territory:p.territory, hpo:p.hpo, next:p.nextvisit, rel:p.relstatus})),
+  ].sort((a,b)=> (a.next||'').localeCompare(b.next||''));
+  const table = document.getElementById('visitsTable');
+  if(rows.length===0){ table.innerHTML = `<tr><td><div class="empty"><div class="big">✅</div>No due or overdue visits right now.</div></td></tr>`; return; }
+  table.innerHTML = `<thead><tr><th>Type</th><th>ID</th><th>Name</th><th>Territory</th><th>HPO</th><th>Next Visit</th><th>Relationship</th></tr></thead>
+    <tbody>${rows.map(r=>`
+      <tr>
+        <td><span class="pill ${r.type==='Doctor'?'high':'medium'}">${r.type}</span></td>
+        <td><span class="id-tag">${escHtml(r.id)}</span></td>
+        <td><strong>${escHtml(r.name)}</strong></td>
+        <td>${escHtml(r.territory)}</td>
+        <td>${escHtml(r.hpo)}</td>
+        <td>${escHtml(r.next)} <span class="pill low">due</span></td>
+        <td><span class="pill ${pillClass(r.rel)}">${escHtml(r.rel)}</span></td>
+      </tr>`).join('')}</tbody>`;
+}
+
+/* ================= CSV EXPORT ================= */
+function csvEscape(v){ if(v===undefined || v===null) v=''; v = String(v); if(/[",\n]/.test(v)) v = '"' + v.replace(/"/g,'""') + '"'; return v; }
+function toCSV(headers, rows){ return [headers.join(','), ...rows.map(r=>r.map(csvEscape).join(','))].join('\r\n'); }
+function downloadCSV(filename, content){
+  const blob = new Blob(['\uFEFF'+content], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+const docHeaders = ['Doctor ID','Name','Specialty','Designation','Hospital/Chamber','Department','Mobile','Email','Address','Territory','Category','Patient Footfall/Day','Current Selling Amount','Potential Selling Amount','Current Referral Amount','Potential Referral Amount','Key Service Interest','Preferred Contact Time','HPO Assigned','Visit Frequency','Last Visit','Next Visit','Relationship Status','Engagement Status','Remarks'];
+const phHeaders = ['Customer ID','Name','Owner','Contact Person','Mobile','Address','Territory','Customer Type','Outlet Class','License No.','Linked Hospital/Doctor','Current Selling Amount','Potential Selling Amount','Current Referral Amount','Potential Referral Amount','Product Interest','HPO Assigned','Visit Frequency','Last Visit','Next Visit','Relationship Status','Onboarding Status','Remarks'];
+function docRow(d){ return [d.id,d.name,d.specialty,d.designation,d.hospital,d.department,d.mobile,d.email,d.address,d.territory,d.category,d.footfall,d.sellcur,d.sellpot,d.refamtcur,d.refamtpot,d.service,d.contacttime,d.hpo,d.frequency,d.lastvisit,d.nextvisit,d.relstatus,d.engagement,d.remarks]; }
+function phRow(p){ return [p.id,p.name,p.owner,p.contact,p.mobile,p.address,p.territory,p.type,p.cls,p.license,p.linked,p.sellcur,p.sellpot,p.refamtcur,p.refamtpot,p.interest,p.hpo,p.frequency,p.lastvisit,p.nextvisit,p.relstatus,p.onboard,p.remarks]; }
+function exportCSV(kind){
+  const dList = myDoctors(), pList = myPharmacies();
+  if(kind==='doctors'){ downloadCSV('akij-mediplex-doctors.csv', toCSV(docHeaders, dList.map(docRow))); toast('Downloaded doctors.csv'); }
+  else if(kind==='pharmacies'){ downloadCSV('akij-mediplex-pharmacies.csv', toCSV(phHeaders, pList.map(phRow))); toast('Downloaded pharmacies.csv'); }
+  else if(kind==='combined'){
+    const headers = ['Record Type', ...docHeaders.slice(1)];
+    const rows = [
+      ...dList.map(d=>['Doctor', ...docRow(d).slice(1)]),
+      ...pList.map(p=>['Pharmacy', p.name,'','',p.linked||'','',p.mobile,'',p.address,p.territory,p.cls,'', p.sellcur,p.sellpot,p.refamtcur,p.refamtpot,p.interest,'',p.hpo,p.frequency,p.lastvisit,p.nextvisit,p.relstatus,p.onboard,p.remarks]),
+    ];
+    downloadCSV('akij-mediplex-crm-export.csv', toCSV(headers, rows));
+    toast('Downloaded combined export');
+  }
+}
+function renderExportCounts(){
+  document.getElementById('docCountLabel').textContent = myDoctors().length;
+  document.getElementById('phCountLabel').textContent = myPharmacies().length;
+}
+
+/* ================= ADMIN ================= */
+function renderAdmin(){
+  document.getElementById('adminUserDisplay').textContent = accounts.admin.username;
+  document.getElementById('adminPassDisplay').textContent = accounts.admin.password;
+  document.getElementById('adminGoogleEmail').value = accounts.admin.email || '';
+  document.getElementById('hpoCount').textContent = accounts.hpos.length;
+  const table = document.getElementById('hpoTable');
+  table.innerHTML = `<thead><tr><th>Name</th><th>Territory</th><th>Email</th><th>Username</th><th>Password</th><th>Assigned customers</th><th></th></tr></thead>
+    <tbody>${accounts.hpos.map((u,i)=>{
+      const count = doctors.filter(d=>d.hpo===u.name).length + pharmacies.filter(p=>p.hpo===u.name).length;
+      return `<tr>
+        <td><strong>${escHtml(u.name)}</strong></td>
+        <td>${escHtml(u.territory)}</td>
+        <td class="mono">${escHtml(u.email||'—')}</td>
+        <td class="mono">${escHtml(u.username)}</td>
+        <td class="mono">${escHtml(u.password)}</td>
+        <td>${count}</td>
+        <td class="row-actions">
+          <button class="btn btn-sm btn-ghost" onclick="copyText('${u.username} / ${u.password}','Credential copied')">Copy</button>
+          <button class="btn btn-sm btn-danger" onclick="removeHpo(${i})">Remove</button>
+        </td>
+      </tr>`;
+    }).join('')}</tbody>`;
+}
+function saveAdminEmail(){
+  const email = document.getElementById('adminGoogleEmail').value.trim();
+  accounts.admin.email = email;
+  saveAccounts();
+  toast(email ? 'Admin Google email saved' : 'Admin Google email cleared');
+}
+function randomPassword(len=10){
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+  let out=''; const arr = new Uint32Array(len); crypto.getRandomValues(arr);
+  for(let i=0;i<len;i++) out += chars[arr[i]%chars.length];
+  return out;
+}
+function generateHpoCredential(){
+  const name = document.getElementById('newHpoName').value.trim();
+  const territory = document.getElementById('newHpoTerritory').value.trim();
+  const email = document.getElementById('newHpoEmail').value.trim();
+  if(!name){ toast("Enter the HPO's full name", true); return; }
+  const username = name.toLowerCase().replace(/[^a-z]+/g,'.').replace(/^\.+|\.+$/g,'');
+  if(accounts.hpos.some(h=>h.username===username)){ toast('A user with a similar name already exists', true); return; }
+  const password = randomPassword(10);
+  accounts.hpos.push({name, territory: territory||'Unassigned', username, password, email});
+  saveAccounts();
+  document.getElementById('newHpoName').value=''; document.getElementById('newHpoTerritory').value=''; document.getElementById('newHpoEmail').value='';
+  renderAdmin();
+  toast('Credential generated for ' + name);
+}
+function removeHpo(i){
+  if(!confirm('Remove this HPO account? Their existing customer records will remain but will need reassignment.')) return;
+  accounts.hpos.splice(i,1);
+  saveAccounts();
+  renderAdmin();
+}
+async function resetDemoData(){
+  if(!confirm('This will discard ALL current data (for everyone using this CRM) and restore the original sample data and 15 HPO accounts. Continue?')) return;
+  doctors = seedDoctors(); pharmacies = seedPharmacies(); accounts = seedAccounts();
+  await Promise.all([saveDoctors(), savePharmacies(), saveAccounts()]);
+  doctorSeq = doctors.length+1; pharmaSeq = pharmacies.length+1;
+  renderAdmin(); renderDashboard();
+  toast('Reset to sample data');
+}
+
+/* ================= INIT ================= */
+(async function init(){
+  await loadAll();
+})();
+</script>
+</body>
+</html>
