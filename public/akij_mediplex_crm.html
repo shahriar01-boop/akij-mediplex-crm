@@ -95,7 +95,9 @@
 
   /* ---------- Cards / KPIs ---------- */
   .grid-kpi{ display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:14px; margin-bottom:28px; }
-  .kpi{ background:var(--paper); border:1px solid var(--line); border-top:3px solid var(--cyan); border-radius:var(--radius); padding:18px 18px 16px; box-shadow:var(--shadow); }
+  .kpi{ background:var(--paper); border:1px solid var(--line); border-top:3px solid var(--cyan); border-radius:var(--radius); padding:18px 18px 16px; box-shadow:var(--shadow); cursor:pointer; transition:transform .1s ease, box-shadow .15s ease; }
+  .kpi:hover{ transform:translateY(-2px); box-shadow:0 4px 16px rgba(46,49,146,0.14); }
+  .kpi:active{ transform:scale(.98); }
   .kpi .label{ font-size:11.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:600;}
   .kpi .value{ font-family:'Fraunces',serif; font-size:29px; margin-top:6px; color:var(--navy-900);}
   .kpi .delta{ font-size:12px; margin-top:4px; color:var(--muted);}
@@ -775,15 +777,15 @@ function renderDashboard(){
   const prospects = dList.filter(d=>d.category==='New Prospect').length + pList.filter(p=>p.onboard==='Prospect'||p.onboard==='New').length;
 
   const kpis = [
-    {label:'Total Doctors', value: dList.length, delta:`${highPotDoc} high-potential`, cls:'up'},
-    {label:'Total Pharmacies', value: pList.length, delta:`${pList.filter(p=>p.cls==='A').length} class-A outlets`, cls:'up'},
-    {label:'Due / Overdue Visits', value: dueVisits, delta: dueVisits>0 ? 'needs attention' : 'all on schedule', cls: dueVisits>0?'warn':'up'},
-    {label:'New Prospects', value: prospects, delta:'in onboarding pipeline', cls:''},
-    {label:'Doctor Selling Gap', value: fmtMoney(sellPotSumD-sellCurSumD), delta:`${fmtMoney(sellCurSumD)} of ${fmtMoney(sellPotSumD)} potential`, cls:'warn'},
-    {label:'Pharmacy Selling Gap', value: fmtMoney(sellPotSumP-sellCurSumP), delta:`${fmtMoney(sellCurSumP)} of ${fmtMoney(sellPotSumP)} potential`, cls:'warn'},
-    {label:'Inactive Customers', value: inactive, delta:'flagged for reactivation', cls: inactive>0?'warn':'up'},
+    {label:'Total Doctors', value: dList.length, delta:`${highPotDoc} high-potential`, cls:'up', action:()=>go('doctors')},
+    {label:'Total Pharmacies', value: pList.length, delta:`${pList.filter(p=>p.cls==='A').length} class-A outlets`, cls:'up', action:()=>go('pharmacies')},
+    {label:'Due / Overdue Visits', value: dueVisits, delta: dueVisits>0 ? 'needs attention' : 'all on schedule', cls: dueVisits>0?'warn':'up', action:()=>go('visits')},
+    {label:'New Prospects', value: prospects, delta:'in onboarding pipeline', cls:'', action:()=>{ document.getElementById('docCategoryFilter').value='New Prospect'; go('doctors'); }},
+    {label:'Doctor Selling Gap', value: fmtMoney(sellPotSumD-sellCurSumD), delta:`${fmtMoney(sellCurSumD)} of ${fmtMoney(sellPotSumD)} potential`, cls:'warn', action:()=>go('doctors')},
+    {label:'Pharmacy Selling Gap', value: fmtMoney(sellPotSumP-sellCurSumP), delta:`${fmtMoney(sellCurSumP)} of ${fmtMoney(sellPotSumP)} potential`, cls:'warn', action:()=>go('pharmacies')},
+    {label:'Inactive Customers', value: inactive, delta:'flagged for reactivation', cls: inactive>0?'warn':'up', action:()=>{ document.getElementById('docRelFilter').value='Inactive'; go('doctors'); }},
   ];
-  document.getElementById('kpiGrid').innerHTML = kpis.map(k=>`<div class="kpi"><div class="label">${k.label}</div><div class="value">${k.value}</div><div class="delta ${k.cls}">${k.delta}</div></div>`).join('');
+  document.getElementById('kpiGrid').innerHTML = kpis.map(k=>`<div class="kpi" onclick="(${k.action.toString()})()"><div class="label">${k.label}</div><div class="value">${k.value}</div><div class="delta ${k.cls}">${k.delta}</div></div>`).join('');
 
   document.getElementById('gapDoctorSell').innerHTML = gapPanel(dList, 'sellcur', 'sellpot');
   document.getElementById('gapDoctorRef').innerHTML  = gapPanel(dList, 'refamtcur', 'refamtpot');
