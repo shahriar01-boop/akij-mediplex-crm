@@ -563,10 +563,10 @@ let serverAvailable = null;
 async function serverGet(endpoint){
   try{
     const r = await fetch(endpoint);
-    if(!r.ok) return null;
+    if(!r.ok) return {error: true};
     const data = await r.json();
-    return data.value ?? null;
-  }catch(e){ return null; }
+    return {value: data.value ?? null};
+  }catch(e){ return {error: true}; }
 }
 
 async function serverSet(endpoint, value){
@@ -583,10 +583,10 @@ async function serverSet(endpoint, value){
 async function safeGet(key){
   const api = API_MAP[key];
   if(api && serverAvailable !== false){
-    const v = await serverGet(api);
-    if(v !== null){
+    const result = await serverGet(api);
+    if(!result.error){
       serverAvailable = true;
-      return v;
+      return result.value;
     }
     serverAvailable = false;
   }
