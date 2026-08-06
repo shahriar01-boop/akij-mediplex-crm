@@ -247,6 +247,7 @@
       <div class="nav-item" data-view="doctors"><span class="ic">⚕</span> Doctors</div>
       <div class="nav-item" data-view="pharmacies"><span class="ic">✚</span> Pharmacies / Chemists</div>
       <div class="nav-item" data-view="visits"><span class="ic">◷</span> Due Visits</div>
+      <div class="nav-item" data-view="dailyvisits"><span class="ic">📋</span> Daily Visit Log</div>
       <div class="nav-sep"></div>
       <div class="nav-item" data-view="export"><span class="ic">⭳</span> Export CSV</div>
       <div class="nav-item" data-view="admin" id="navAdmin" style="display:none;"><span class="ic">🔒</span> Admin Panel</div>
@@ -329,6 +330,48 @@
     <section id="view-visits" style="display:none;">
       <div class="topbar"><div><h1>Due &amp; Overdue Visits</h1><div class="sub">Every customer whose next visit date has arrived or passed</div></div></div>
       <div class="panel"><div class="table-wrap"><table id="visitsTable"></table></div></div>
+    </section>
+
+    <!-- DAILY VISIT LOG -->
+    <section id="view-dailyvisits" style="display:none;">
+      <div class="topbar"><div><h1>Daily Visit Log</h1><div class="sub">Record field visits with selling amounts — view day-end totals by HPO</div></div></div>
+      <div class="panel">
+        <h2>Log a Visit</h2>
+        <div class="desc">Record a customer visit with the selling amount achieved</div>
+        <div class="form-grid" style="margin-bottom:12px;">
+          <div class="field"><label>Date<span class="req">*</span></label><input type="date" id="vl_date"></div>
+          <div class="field"><label>Customer type<span class="req">*</span></label><select id="vl_customerType" onchange="onVisitCustomerTypeChange()"><option value="Doctor">Doctor</option><option value="Pharmacy">Pharmacy / Chemist</option></select></div>
+          <div class="field"><label>Customer<span class="req">*</span></label><select id="vl_customer"></select></div>
+          <div class="field"><label>HPO<span class="req">*</span></label><select id="vl_hpo"></select></div>
+          <div class="field"><label>Selling amount (৳)<span class="req">*</span></label><input type="number" id="vl_amount" placeholder="15000"></div>
+          <div class="field span2"><label>Notes <span style="text-transform:none;font-weight:400;">(optional)</span></label><input type="text" id="vl_notes" placeholder="Brief summary of the visit"></div>
+        </div>
+        <button class="btn btn-primary" onclick="logVisit()">+ Log Visit</button>
+        <div class="form-err" id="visitLogErr" style="margin-top:8px;"></div>
+      </div>
+
+      <div class="panel">
+        <h2>Today's Visits — <span id="vlDateLabel"></span></h2>
+        <div class="desc" id="vlDateSub"></div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px;">
+          <div class="field"><label>Filter by date</label><input type="date" id="vlFilterDate" onchange="renderDailyVisits()"></div>
+          <div class="field"><label>Filter by HPO</label><select id="vlFilterHpo" onchange="renderDailyVisits()"><option value="">All HPOs</option></select></div>
+        </div>
+        <div class="table-wrap"><table id="visitLogTable"></table></div>
+      </div>
+
+      <div class="grid-2">
+        <div class="panel">
+          <h2>Day-End Selling Summary — <span id="vlSummaryDate"></span></h2>
+          <div class="desc">Total selling amount per HPO for the selected date</div>
+          <div class="table-wrap"><table id="visitLogSummary"></table></div>
+        </div>
+        <div class="panel">
+          <h2>Customer-wise Breakdown</h2>
+          <div class="desc">Amount by customer for the selected date</div>
+          <div class="table-wrap"><table id="visitLogCustBreakdown"></table></div>
+        </div>
+      </div>
     </section>
 
     <!-- EXPORT -->
@@ -496,20 +539,24 @@
 const K_DOCTORS = 'akij-crm-doctors-v2';
 const K_PHARMA  = 'akij-crm-pharmacies-v2';
 const K_ACCOUNTS = 'akij-crm-accounts-v2';
+const K_VISITLOGS = 'akij-crm-visitlogs-v1';
 const API_MAP = {
   [K_DOCTORS]: '/api/doctors',
   [K_PHARMA]: '/api/pharmacies',
   [K_ACCOUNTS]: '/api/accounts',
+  [K_VISITLOGS]: '/api/visitlogs',
 };
 
 let doctors = [];
 let pharmacies = [];
+let visitLogs = [];
 let accounts = null; // { admin:{username,password}, hpos:[{name,territory,username,password}] }
 let currentUser = null; // {role:'admin'|'hpo', name, username, territory}
 let editingDoctorId = null;
 let editingPharmaId = null;
 let doctorSeq = 1;
 let pharmaSeq = 1;
+let visitLogSeq = 1;
 
 function todayPlus(days){ const d = new Date(); d.setDate(d.getDate()+days); return d.toISOString().slice(0,10); }
 function todayMinus(days){ return todayPlus(-days); }
@@ -553,6 +600,14 @@ function seedPharmacies(){
     {id:'PHA-DHK-00003', name:"City Diagnostic Pharmacy", owner:"Rezaul Karim", contact:"Rezaul Karim", mobile:"01944556677", address:"Sector 7, Uttara", territory:"Uttara", type:"Diagnostic-linked Pharmacy", cls:"A", license:"DGDA-30045", linked:"City General Hospital", sellcur:52000, sellpot:120000, refamtcur:9000, refamtpot:32000, interest:"Diagnostic reagents", hpo:"Imran Kabir", frequency:"Weekly", lastvisit:todayMinus(25), nextvisit:todayMinus(4), relstatus:"Developing", onboard:"Existing", remarks:"Large gap — priority follow-up."},
     {id:'PHA-DHK-00004', name:"Al-Amin Chemist", owner:"Md. Al-Amin", contact:"Al-Amin", mobile:"01655667788", address:"Mirpur 1", territory:"Mirpur", type:"Chemist", cls:"C", license:"DGDA-40098", linked:"AKIJ Mediplex", sellcur:6000, sellpot:25000, refamtcur:1200, refamtpot:6000, interest:"General OTC", hpo:"Tanvir Ahmed", frequency:"Monthly", lastvisit:todayMinus(2), nextvisit:todayPlus(10), relstatus:"Developing", onboard:"New", remarks:"Onboarded this month."},
     {id:'PHA-DHK-00005', name:"Wellcare Pharmacy", owner:"Nazma Begum", contact:"Nazma Begum", mobile:"01566778899", address:"Road 27, Dhanmondi", territory:"Dhanmondi", type:"Retail Pharmacy", cls:"New", license:"Pending", linked:"AKIJ Mediplex", sellcur:0, sellpot:40000, refamtcur:0, refamtpot:9000, interest:"Not yet assessed", hpo:"Sadia Rahman", frequency:"Weekly", lastvisit:"", nextvisit:todayPlus(1), relstatus:"Developing", onboard:"Prospect", remarks:"First visit scheduled."},
+  ];
+}
+function seedVisitLogs(){
+  return [
+    {id:'VL-00001', date:todayMinus(0), customerType:'Doctor', customerId:'DOC-DHK-00001', customerName:'Dr. Rafiqul Islam', hpo:'Tanvir Ahmed', sellingAmount:15000, notes:'Discussed new cardiac package. Positive response.'},
+    {id:'VL-00002', date:todayMinus(0), customerType:'Pharmacy', customerId:'PHA-DHK-00001', customerName:'Green Life Pharmacy', hpo:'Tanvir Ahmed', sellingAmount:8500, notes:'Restocked diabetes range. Next order next week.'},
+    {id:'VL-00003', date:todayMinus(0), customerType:'Doctor', customerId:'DOC-DHK-00002', customerName:'Dr. Nasima Chowdhury', hpo:'Sadia Rahman', sellingAmount:12000, notes:'Antenatal package inquiry. Follow up Thursday.'},
+    {id:'VL-00004', date:todayMinus(0), customerType:'Pharmacy', customerId:'PHA-DHK-00002', customerName:'Popular Chemist', hpo:'Sadia Rahman', sellingAmount:4200, notes:'OTC order placed.'},
   ];
 }
 
@@ -612,20 +667,24 @@ async function safeSet(key, value){
   return true;
 }
 async function loadAll(){
-  const [dRaw, pRaw, aRaw] = await Promise.all([safeGet(K_DOCTORS), safeGet(K_PHARMA), safeGet(K_ACCOUNTS)]);
+  const [dRaw, pRaw, aRaw, vRaw] = await Promise.all([safeGet(K_DOCTORS), safeGet(K_PHARMA), safeGet(K_ACCOUNTS), safeGet(K_VISITLOGS)]);
   doctors = dRaw ? JSON.parse(dRaw) : seedDoctors();
   pharmacies = pRaw ? JSON.parse(pRaw) : seedPharmacies();
+  visitLogs = vRaw ? JSON.parse(vRaw) : seedVisitLogs();
   const parsedAccts = aRaw ? JSON.parse(aRaw) : null;
   accounts = (parsedAccts && parsedAccts.admin) ? parsedAccts : seedAccounts();
   if(!dRaw) await saveDoctors();
   if(!pRaw) await savePharmacies();
+  if(!vRaw) await saveVisitLogs();
   if(!aRaw || !(parsedAccts && parsedAccts.admin)) await saveAccounts();
   doctorSeq = doctors.reduce((m,d)=>Math.max(m, parseInt((d.id||'').split('-').pop())||0), 0) + 1;
   pharmaSeq = pharmacies.reduce((m,p)=>Math.max(m, parseInt((p.id||'').split('-').pop())||0), 0) + 1;
+  visitLogSeq = visitLogs.reduce((m,v)=>Math.max(m, parseInt((v.id||'').split('-').pop())||0), 0) + 1;
 }
 async function saveDoctors(){ await safeSet(K_DOCTORS, JSON.stringify(doctors)); }
 async function savePharmacies(){ await safeSet(K_PHARMA, JSON.stringify(pharmacies)); }
 async function saveAccounts(){ await safeSet(K_ACCOUNTS, JSON.stringify(accounts)); }
+async function saveVisitLogs(){ await safeSet(K_VISITLOGS, JSON.stringify(visitLogs)); }
 
 /* ================= LOGIN ================= */
 // Set GOOGLE_CLIENT_ID to enable real Google OAuth (requires Google Cloud project).
@@ -711,7 +770,7 @@ function myPharmacies(){
 }
 
 /* ================= NAV ================= */
-const views = ['dashboard','doctors','pharmacies','visits','export','admin'];
+const views = ['dashboard','doctors','pharmacies','visits','dailyvisits','export','admin'];
 function go(view){
   if(view === 'admin' && currentUser.role !== 'admin'){ return; }
   views.forEach(v=>{ document.getElementById('view-'+v).style.display = (v===view)?'block':'none'; });
@@ -722,6 +781,7 @@ function go(view){
   if(view==='doctors') renderDoctors();
   if(view==='pharmacies') renderPharma();
   if(view==='visits') renderVisits();
+  if(view==='dailyvisits') renderDailyVisits();
   if(view==='export') renderExportCounts();
   if(view==='admin') renderAdmin();
 }
@@ -775,10 +835,13 @@ function renderDashboard(){
   const sellCurSumP = pList.reduce((s,p)=>s+Number(p.sellcur||0),0);
   const inactive = dList.filter(d=>d.relstatus==='Inactive').length + pList.filter(p=>p.relstatus==='Inactive').length;
   const prospects = dList.filter(d=>d.category==='New Prospect').length + pList.filter(p=>p.onboard==='Prospect'||p.onboard==='New').length;
+  const todayVisits = myVisitLogs().filter(v=>v.date===todayMinus(0));
+  const todaySelling = todayVisits.reduce((s,v)=>s + v.sellingAmount, 0);
 
   const kpis = [
     {label:'Total Doctors', value: dList.length, delta:`${highPotDoc} high-potential`, cls:'up', action:()=>go('doctors')},
     {label:'Total Pharmacies', value: pList.length, delta:`${pList.filter(p=>p.cls==='A').length} class-A outlets`, cls:'up', action:()=>go('pharmacies')},
+    {label:"Today's Selling", value: fmtMoney(todaySelling), delta:`${todayVisits.length} visits logged today`, cls: todayVisits.length>0?'up':'', action:()=>go('dailyvisits')},
     {label:'Due / Overdue Visits', value: dueVisits, delta: dueVisits>0 ? 'needs attention' : 'all on schedule', cls: dueVisits>0?'warn':'up', action:()=>go('visits')},
     {label:'New Prospects', value: prospects, delta:'in onboarding pipeline', cls:'', action:()=>{ document.getElementById('docCategoryFilter').value='New Prospect'; go('doctors'); }},
     {label:'Doctor Selling Gap', value: fmtMoney(sellPotSumD-sellCurSumD), delta:`${fmtMoney(sellCurSumD)} of ${fmtMoney(sellPotSumD)} potential`, cls:'warn', action:()=>go('doctors')},
@@ -994,6 +1057,144 @@ function renderVisits(){
       </tr>`).join('')}</tbody>`;
 }
 
+/* ================= DAILY VISIT LOG ================= */
+function myVisitLogs(){
+  if(currentUser.role === 'admin') return visitLogs;
+  const regHpo = accounts.hpos.find(h=>h.name===currentUser.name);
+  return regHpo ? visitLogs.filter(v=>v.hpo===currentUser.name) : visitLogs;
+}
+
+function populateVisitCustomerDropdown(){
+  const type = document.getElementById('vl_customerType').value;
+  const sel = document.getElementById('vl_customer');
+  if(type === 'Doctor'){
+    sel.innerHTML = doctors.map(d=>`<option value="${d.id}">${escHtml(d.name)} (${escHtml(d.territory)})</option>`).join('');
+  } else {
+    sel.innerHTML = pharmacies.map(p=>`<option value="${p.id}">${escHtml(p.name)} (${escHtml(p.territory)})</option>`).join('');
+  }
+}
+
+function populateVisitHpoDropdown(presetName){
+  const sel = document.getElementById('vl_hpo');
+  sel.innerHTML = accounts.hpos.map(h=>`<option value="${h.name}">${h.name}</option>`).join('');
+  if(currentUser.role !== 'admin'){
+    sel.value = currentUser.name;
+    sel.disabled = true;
+  } else if(presetName){
+    sel.value = presetName;
+  }
+}
+
+function onVisitCustomerTypeChange(){
+  populateVisitCustomerDropdown();
+}
+
+function logVisit(){
+  const date = document.getElementById('vl_date').value;
+  const customerType = document.getElementById('vl_customerType').value;
+  const customerId = document.getElementById('vl_customer').value;
+  const hpo = document.getElementById('vl_hpo').value;
+  const amount = Number(document.getElementById('vl_amount').value||0);
+  const notes = document.getElementById('vl_notes').value.trim();
+  const errEl = document.getElementById('visitLogErr');
+  if(!date){ errEl.textContent = 'Please select a date.'; return; }
+  if(!customerId){ errEl.textContent = 'Please select a customer.'; return; }
+  if(!hpo){ errEl.textContent = 'Please select an HPO.'; return; }
+  if(!amount || amount<=0){ errEl.textContent = 'Please enter a valid selling amount.'; return; }
+  const cust = customerType==='Doctor' ? doctors.find(d=>d.id===customerId) : pharmacies.find(p=>p.id===customerId);
+  const custName = cust ? cust.name : customerId;
+  visitLogs.push({
+    id: 'VL-' + String(visitLogSeq++).padStart(5,'0'),
+    date, customerType, customerId, customerName:custName, hpo, sellingAmount:amount, notes
+  });
+  saveVisitLogs();
+  document.getElementById('vl_amount').value = '';
+  document.getElementById('vl_notes').value = '';
+  document.getElementById('visitLogErr').textContent = '';
+  renderDailyVisits();
+  toast('Visit logged — ' + custName);
+}
+
+function deleteVisitLog(id){
+  if(!confirm('Delete this visit log entry?')) return;
+  visitLogs = visitLogs.filter(v=>v.id!==id);
+  saveVisitLogs();
+  renderDailyVisits();
+  toast('Visit log entry removed');
+}
+
+function renderDailyVisits(){
+  const filterDate = document.getElementById('vlFilterDate').value || todayMinus(0);
+  const filterHpo = document.getElementById('vlFilterHpo').value;
+  document.getElementById('vl_date').value = filterDate;
+  document.getElementById('vlDateLabel').textContent = new Date(filterDate+'T00:00').toLocaleDateString('en-BD',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  document.getElementById('vlSummaryDate').textContent = filterDate;
+
+  let logs = myVisitLogs().filter(v=>v.date===filterDate);
+  if(filterHpo) logs = logs.filter(v=>v.hpo===filterHpo);
+  document.getElementById('vlDateSub').textContent = `${logs.length} visit(s) recorded`;
+
+  // Populate HPO filter dropdown
+  const hpoNames = [...new Set(myVisitLogs().map(v=>v.hpo))].sort();
+  const hpoSel = document.getElementById('vlFilterHpo');
+  hpoSel.innerHTML = '<option value="">All HPOs</option>' + hpoNames.map(n=>`<option value="${n}" ${n===filterHpo?'selected':''}>${n}</option>`).join('');
+
+  populateVisitCustomerDropdown();
+  populateVisitHpoDropdown(filterHpo || (currentUser.role!=='admin'?currentUser.name:''));
+
+  // Visits table
+  const table = document.getElementById('visitLogTable');
+  if(logs.length===0){
+    table.innerHTML = '<tr><td><div class="empty"><div class="big">📋</div>No visits recorded for this date.</div></td></tr>';
+  } else {
+    table.innerHTML = `<thead><tr><th>ID</th><th>Customer</th><th>Type</th><th>HPO</th><th>Selling Amount</th><th>Notes</th><th></th></tr></thead>
+      <tbody>${logs.map(v=>`
+        <tr>
+          <td><span class="id-tag">${v.id}</span></td>
+          <td><strong>${escHtml(v.customerName)}</strong></td>
+          <td><span class="pill ${v.customerType==='Doctor'?'high':'medium'}">${v.customerType}</span></td>
+          <td>${escHtml(v.hpo)}</td>
+          <td><strong>${fmtMoney(v.sellingAmount)}</strong></td>
+          <td>${escHtml(v.notes||'—')}</td>
+          <td><button class="btn btn-sm btn-danger" onclick="deleteVisitLog('${v.id}')">Delete</button></td>
+        </tr>`).join('')}</tbody>`;
+  }
+
+  // HPO summary
+  const hpoTotals = {};
+  logs.forEach(v=>{ hpoTotals[v.hpo] = (hpoTotals[v.hpo]||0) + v.sellingAmount; });
+  const summaryEntries = Object.entries(hpoTotals).sort((a,b)=>b[1]-a[1]);
+  const summaryTable = document.getElementById('visitLogSummary');
+  if(summaryEntries.length===0){
+    summaryTable.innerHTML = '<tr><td><div class="empty">No data</div></td></tr>';
+  } else {
+    const grandTotal = summaryEntries.reduce((s,[,a])=>s+a,0);
+    summaryTable.innerHTML = `<thead><tr><th>HPO</th><th>Total Selling (৳)</th><th>Visits</th><th>Share</th></tr></thead>
+      <tbody>${summaryEntries.map(([hpo,amt])=>{
+        const count = logs.filter(v=>v.hpo===hpo).length;
+        const pct = grandTotal>0 ? Math.round((amt/grandTotal)*100) : 0;
+        return `<tr><td><strong>${escHtml(hpo)}</strong></td><td>${fmtMoney(amt)}</td><td>${count}</td><td>${pct}%</td></tr>`;
+      }).join('')}
+      <tr style="font-weight:700;border-top:2px solid var(--navy-100);"><td>Total</td><td>${fmtMoney(grandTotal)}</td><td>${logs.length}</td><td>100%</td></tr></tbody>`;
+  }
+
+  // Customer breakdown
+  const custTotals = {};
+  logs.forEach(v=>{ const key = v.customerName; custTotals[key] = (custTotals[key]||0) + v.sellingAmount; });
+  const custEntries = Object.entries(custTotals).sort((a,b)=>b[1]-a[1]);
+  const custTable = document.getElementById('visitLogCustBreakdown');
+  if(custEntries.length===0){
+    custTable.innerHTML = '<tr><td><div class="empty">No data</div></td></tr>';
+  } else {
+    const grand = custEntries.reduce((s,[,a])=>s+a,0);
+    custTable.innerHTML = `<thead><tr><th>Customer</th><th>Amount (৳)</th><th>%</th></tr></thead>
+      <tbody>${custEntries.map(([name,amt])=>{
+        const pct = grand>0 ? Math.round((amt/grand)*100) : 0;
+        return `<tr><td>${escHtml(name)}</td><td>${fmtMoney(amt)}</td><td>${pct}%</td></tr>`;
+      }).join('')}</tbody>`;
+  }
+}
+
 /* ================= CSV EXPORT ================= */
 function csvEscape(v){ if(v===undefined || v===null) v=''; v = String(v); if(/[",\n]/.test(v)) v = '"' + v.replace(/"/g,'""') + '"'; return v; }
 function toCSV(headers, rows){ return [headers.join(','), ...rows.map(r=>r.map(csvEscape).join(','))].join('\r\n'); }
@@ -1085,9 +1286,9 @@ function removeHpo(i){
 }
 async function resetDemoData(){
   if(!confirm('This will discard ALL current data (for everyone using this CRM) and restore the original sample data and 15 HPO accounts. Continue?')) return;
-  doctors = seedDoctors(); pharmacies = seedPharmacies(); accounts = seedAccounts();
-  await Promise.all([saveDoctors(), savePharmacies(), saveAccounts()]);
-  doctorSeq = doctors.length+1; pharmaSeq = pharmacies.length+1;
+  doctors = seedDoctors(); pharmacies = seedPharmacies(); accounts = seedAccounts(); visitLogs = seedVisitLogs();
+  await Promise.all([saveDoctors(), savePharmacies(), saveAccounts(), saveVisitLogs()]);
+  doctorSeq = doctors.length+1; pharmaSeq = pharmacies.length+1; visitLogSeq = visitLogs.length+1;
   renderAdmin(); renderDashboard();
   toast('Reset to sample data');
 }

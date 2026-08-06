@@ -73,6 +73,18 @@ app.put('/api/accounts', (req, res) => {
   res.json({ success: ok });
 });
 
+app.get('/api/visitlogs', (_req, res) => {
+  const data = readData('visitlogs.json');
+  res.json({ value: data || null });
+});
+
+app.put('/api/visitlogs', (req, res) => {
+  const { value } = req.body;
+  if (typeof value !== 'string') return res.status(400).json({ error: 'value required' });
+  const ok = writeData('visitlogs.json', value);
+  res.json({ success: ok });
+});
+
 app.get('*', (_req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'akij_mediplex_crm.html'));
 });
