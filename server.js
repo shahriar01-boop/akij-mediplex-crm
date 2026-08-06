@@ -39,7 +39,7 @@ function writeData(filename, value) {
 
 app.get('/api/doctors', (_req, res) => {
   const data = readData('doctors.json');
-  res.json({ value: data || '[]' });
+  res.json({ value: data || null });
 });
 
 app.put('/api/doctors', (req, res) => {
@@ -51,7 +51,7 @@ app.put('/api/doctors', (req, res) => {
 
 app.get('/api/pharmacies', (_req, res) => {
   const data = readData('pharmacies.json');
-  res.json({ value: data || '[]' });
+  res.json({ value: data || null });
 });
 
 app.put('/api/pharmacies', (req, res) => {
@@ -63,7 +63,7 @@ app.put('/api/pharmacies', (req, res) => {
 
 app.get('/api/accounts', (_req, res) => {
   const data = readData('accounts.json');
-  res.json({ value: data || '{}' });
+  res.json({ value: data || null });
 });
 
 app.put('/api/accounts', (req, res) => {

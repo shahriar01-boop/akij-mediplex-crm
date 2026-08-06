@@ -613,10 +613,11 @@ async function loadAll(){
   const [dRaw, pRaw, aRaw] = await Promise.all([safeGet(K_DOCTORS), safeGet(K_PHARMA), safeGet(K_ACCOUNTS)]);
   doctors = dRaw ? JSON.parse(dRaw) : seedDoctors();
   pharmacies = pRaw ? JSON.parse(pRaw) : seedPharmacies();
-  accounts = aRaw ? JSON.parse(aRaw) : seedAccounts();
+  const parsedAccts = aRaw ? JSON.parse(aRaw) : null;
+  accounts = (parsedAccts && parsedAccts.admin) ? parsedAccts : seedAccounts();
   if(!dRaw) await saveDoctors();
   if(!pRaw) await savePharmacies();
-  if(!aRaw) await saveAccounts();
+  if(!aRaw || !(parsedAccts && parsedAccts.admin)) await saveAccounts();
   doctorSeq = doctors.reduce((m,d)=>Math.max(m, parseInt((d.id||'').split('-').pop())||0), 0) + 1;
   pharmaSeq = pharmacies.reduce((m,p)=>Math.max(m, parseInt((p.id||'').split('-').pop())||0), 0) + 1;
 }
