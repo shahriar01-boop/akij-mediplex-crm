@@ -392,15 +392,24 @@
 
       <div class="panel">
         <h2>Admin credentials</h2>
-        <div class="desc">Keep these private. Anyone with this password can edit or delete master data.</div>
+        <div class="desc">Passwords are hashed and never visible. Use the form below to change passwords.</div>
         <div class="cred-box">
           <div class="cred-line"><span class="tag">username</span> <strong id="adminUserDisplay">—</strong></div>
-          <div class="cred-line"><span class="tag">password</span> <strong id="adminPassDisplay">—</strong></div>
-          <button class="btn btn-sm btn-ghost" style="color:#ECEDFB;border-color:rgba(255,255,255,.3)" onclick="copyText(accounts.admin.username+' / '+accounts.admin.password,'Admin credential copied')">Copy</button>
+          <div class="cred-line"><span class="tag">password</span> <strong>🔒 Hashed — not retrievable</strong></div>
+          <button class="btn btn-sm btn-ghost" style="color:#ECEDFB;border-color:rgba(255,255,255,.3)" onclick="copyText(accounts.admin.username,'Admin username copied')">Copy username</button>
         </div>
         <div style="margin-top:14px; display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
           <div class="field" style="min-width:260px;"><label>Admin Google email (for Google sign-in)</label><input type="email" id="adminGoogleEmail" placeholder="admin@example.com"></div>
           <button class="btn btn-sm btn-ghost" onclick="saveAdminEmail()">Save email</button>
+        </div>
+        <div style="margin-top:14px; border-top:1px solid var(--line); padding-top:12px;">
+          <div class="desc">Change admin password</div>
+          <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
+            <div class="field" style="min-width:180px;"><label>Current password</label><input type="password" id="cpCurrent" placeholder="Current password"></div>
+            <div class="field" style="min-width:180px;"><label>New password</label><input type="password" id="cpNew" placeholder="Min 6 characters"></div>
+            <button class="btn btn-sm btn-primary" onclick="changePassword()">Change</button>
+          </div>
+          <div class="form-err" id="cpErr" style="margin-top:6px;"></div>
         </div>
       </div>
 
@@ -550,37 +559,45 @@ const API_MAP = {
 let doctors = [];
 let pharmacies = [];
 let visitLogs = [];
-let accounts = null; // { admin:{username,password}, hpos:[{name,territory,username,password}] }
+let accounts = null; // { admin:{username,email}, hpos:[{name,territory,username,email}] } — passwords never stored client-side
 let currentUser = null; // {role:'admin'|'hpo', name, username, territory}
+let authToken = null; // server session token
 let editingDoctorId = null;
 let editingPharmaId = null;
 let doctorSeq = 1;
 let pharmaSeq = 1;
 let visitLogSeq = 1;
 
+function authHeaders(){
+  const headers = {'Content-Type':'application/json'};
+  if(authToken) headers['Authorization'] = 'Bearer ' + authToken;
+  return headers;
+}
+
 function todayPlus(days){ const d = new Date(); d.setDate(d.getDate()+days); return d.toISOString().slice(0,10); }
 function todayMinus(days){ return todayPlus(-days); }
 
 /* ================= SEED DATA ================= */
 function seedAccounts(){
+  // Client-side fallback only — actual accounts with hashed passwords are on the server
   return {
-    admin: { username:'admin', password:'uHoHKubDKpPK', email:'' },
+    admin: { username:'admin', email:'' },
     hpos: [
-      {name:"Tanvir Ahmed",   territory:"Mirpur",       username:"tanvir.ahmed",    password:"nB7Kw4P7RB"},
-      {name:"Sadia Rahman",   territory:"Dhanmondi",    username:"sadia.rahman",    password:"kfMMvy5UG3"},
-      {name:"Imran Kabir",    territory:"Uttara",       username:"imran.kabir",     password:"sf8xq4DfZh"},
-      {name:"Nusrat Jahan",   territory:"Gulshan",      username:"nusrat.jahan",    password:"ECmu8kDL2v"},
-      {name:"Mahfuzur Rahman",territory:"Mohammadpur",  username:"mahfuzur.rahman", password:"DtTPuice9b"},
-      {name:"Farhana Akter",  territory:"Banani",       username:"farhana.akter",   password:"UYmxxtU6hQ"},
-      {name:"Shakil Ahmed",   territory:"Bashundhara",  username:"shakil.ahmed",    password:"7Lr5GyFhzU"},
-      {name:"Ruma Begum",     territory:"Motijheel",    username:"ruma.begum",      password:"e8Cvc2fLPR"},
-      {name:"Kamrul Hasan",   territory:"Farmgate",     username:"kamrul.hasan",    password:"MhraPmbYMp"},
-      {name:"Taslima Khatun", territory:"Wari",         username:"taslima.khatun",  password:"7m65WMdiqu"},
-      {name:"Jubayer Islam",  territory:"Khilgaon",     username:"jubayer.islam",   password:"CyzpPK3cNH"},
-      {name:"Sharmin Sultana",territory:"Rampura",      username:"sharmin.sultana", password:"dhLzG7uqvF"},
-      {name:"Abdul Mannan",   territory:"Tejgaon",      username:"abdul.mannan",    password:"uyYi4EiQNj"},
-      {name:"Rima Akter",     territory:"Savar",        username:"rima.akter",      password:"PENTxMbTaG"},
-      {name:"Zahidul Islam",  territory:"Narayanganj",  username:"zahidul.islam",   password:"bHXkGBBpnU"},
+      {name:"Tanvir Ahmed",   territory:"Mirpur",       username:"tanvir.ahmed"},
+      {name:"Sadia Rahman",   territory:"Dhanmondi",    username:"sadia.rahman"},
+      {name:"Imran Kabir",    territory:"Uttara",       username:"imran.kabir"},
+      {name:"Nusrat Jahan",   territory:"Gulshan",      username:"nusrat.jahan"},
+      {name:"Mahfuzur Rahman",territory:"Mohammadpur",  username:"mahfuzur.rahman"},
+      {name:"Farhana Akter",  territory:"Banani",       username:"farhana.akter"},
+      {name:"Shakil Ahmed",   territory:"Bashundhara",  username:"shakil.ahmed"},
+      {name:"Ruma Begum",     territory:"Motijheel",    username:"ruma.begum"},
+      {name:"Kamrul Hasan",   territory:"Farmgate",     username:"kamrul.hasan"},
+      {name:"Taslima Khatun", territory:"Wari",         username:"taslima.khatun"},
+      {name:"Jubayer Islam",  territory:"Khilgaon",     username:"jubayer.islam"},
+      {name:"Sharmin Sultana",territory:"Rampura",      username:"sharmin.sultana"},
+      {name:"Abdul Mannan",   territory:"Tejgaon",      username:"abdul.mannan"},
+      {name:"Rima Akter",     territory:"Savar",        username:"rima.akter"},
+      {name:"Zahidul Islam",  territory:"Narayanganj",  username:"zahidul.islam"},
     ]
   };
 }
@@ -630,7 +647,7 @@ async function serverSet(endpoint, value){
   try{
     const r = await fetch(endpoint, {
       method: 'PUT',
-      headers: {'Content-Type':'application/json'},
+      headers: authHeaders(),
       body: JSON.stringify({value})
     });
     return r.ok;
@@ -676,7 +693,7 @@ async function loadAll(){
   if(!dRaw) await saveDoctors();
   if(!pRaw) await savePharmacies();
   if(!vRaw) await saveVisitLogs();
-  if(!aRaw || !(parsedAccts && parsedAccts.admin)) await saveAccounts();
+  // Accounts are server-managed — never saved client-side to prevent exposing hashed passwords
   doctorSeq = doctors.reduce((m,d)=>Math.max(m, parseInt((d.id||'').split('-').pop())||0), 0) + 1;
   pharmaSeq = pharmacies.reduce((m,p)=>Math.max(m, parseInt((p.id||'').split('-').pop())||0), 0) + 1;
   visitLogSeq = visitLogs.reduce((m,v)=>Math.max(m, parseInt((v.id||'').split('-').pop())||0), 0) + 1;
@@ -688,10 +705,12 @@ async function saveVisitLogs(){ await safeSet(K_VISITLOGS, JSON.stringify(visitL
 
 /* ================= LOGIN ================= */
 // Set GOOGLE_CLIENT_ID to enable real Google OAuth (requires Google Cloud project).
-// Without it, "Continue with Google" uses a simulated email-based flow.
+// Without it, "Continue with Google" uses the server-side email-based flow.
 
-function loginAs(user){
+function loginAs(user, token){
   currentUser = user;
+  authToken = token || authToken;
+  if(authToken) sessionStorage.setItem('akij-crm-token', authToken);
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('appRoot').style.display = 'flex';
   document.getElementById('whoName').textContent = currentUser.name;
@@ -713,43 +732,38 @@ function closeGoogleModal(){
   document.getElementById('googleModalBg').classList.remove('show');
 }
 
-function submitGoogleLogin(){
+async function submitGoogleLogin(){
   const email = document.getElementById('googleEmailInput').value.trim().toLowerCase();
   const errEl = document.getElementById('googleLoginError');
   if(!email || !email.includes('@')){ errEl.textContent = 'Please enter a valid email address.'; return; }
-  if(!accounts){ errEl.textContent = 'Still loading — please wait.'; return; }
-  if(accounts.admin.email && accounts.admin.email.toLowerCase()===email){
+  try{
+    const r = await fetch('/api/google-login', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email})});
+    const data = await r.json();
+    if(!r.ok){ errEl.textContent = data.error || 'Login failed'; return; }
     closeGoogleModal();
-    loginAs({role:'admin', name:'Administrator', username:accounts.admin.username, territory:'All'});
-    return;
-  }
-  const hpo = accounts.hpos.find(h=>h.email && h.email.toLowerCase()===email);
-  if(hpo){
-    closeGoogleModal();
-    loginAs({role:'hpo', name:hpo.name, username:hpo.username, territory:hpo.territory});
-    return;
-  }
-  closeGoogleModal();
-  const name = email.split('@')[0].replace(/[^a-zA-Z]/g,' ').replace(/\s+/g,' ').trim() || email;
-  const displayName = name.split(' ').map(w=>w.charAt(0).toUpperCase()+w.slice(1)).join(' ');
-  loginAs({role:'hpo', name:displayName, username:email, territory:'Guest — ' + email});
+    loginAs(data.user, data.token);
+  }catch(e){ errEl.textContent = 'Network error — please try again.'; }
 }
 
 async function tryLogin(){
   const u = document.getElementById('loginUser').value.trim();
   const p = document.getElementById('loginPass').value;
   const errEl = document.getElementById('loginError');
-  if(!accounts){ errEl.textContent = 'Still loading — please wait a moment and try again.'; return; }
-  if(u === accounts.admin.username && p === accounts.admin.password){
-    loginAs({role:'admin', name:'Administrator', username:u, territory:'All'});
-  } else {
-    const hpo = accounts.hpos.find(h=>h.username===u && h.password===p);
-    if(hpo) loginAs({role:'hpo', name:hpo.name, username:hpo.username, territory:hpo.territory});
-    else errEl.textContent = 'Incorrect username or password.';
-  }
+  if(!u || !p){ errEl.textContent = 'Please enter username and password.'; return; }
+  try{
+    const r = await fetch('/api/login', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({username:u, password:p})});
+    const data = await r.json();
+    if(!r.ok){ errEl.textContent = data.error || 'Login failed'; return; }
+    loginAs(data.user, data.token);
+  }catch(e){ errEl.textContent = 'Network error — please try again.'; }
 }
 function logout(){
+  if(authToken){
+    fetch('/api/logout', {method:'POST', headers: authHeaders()}).catch(()=>{});
+  }
   currentUser = null;
+  authToken = null;
+  sessionStorage.removeItem('akij-crm-token');
   document.getElementById('appRoot').style.display = 'none';
   document.getElementById('loginScreen').style.display = 'flex';
   document.getElementById('loginUser').value = '';
@@ -1231,32 +1245,50 @@ function renderExportCounts(){
 /* ================= ADMIN ================= */
 function renderAdmin(){
   document.getElementById('adminUserDisplay').textContent = accounts.admin.username;
-  document.getElementById('adminPassDisplay').textContent = accounts.admin.password;
   document.getElementById('adminGoogleEmail').value = accounts.admin.email || '';
   document.getElementById('hpoCount').textContent = accounts.hpos.length;
   const table = document.getElementById('hpoTable');
   table.innerHTML = `<thead><tr><th>Name</th><th>Territory</th><th>Email</th><th>Username</th><th>Password</th><th>Assigned customers</th><th></th></tr></thead>
     <tbody>${accounts.hpos.map((u,i)=>{
       const count = doctors.filter(d=>d.hpo===u.name).length + pharmacies.filter(p=>p.hpo===u.name).length;
+      const pwDisplay = u.password ? escHtml(u.password) : '🔒 Hashed';
       return `<tr>
         <td><strong>${escHtml(u.name)}</strong></td>
         <td>${escHtml(u.territory)}</td>
         <td class="mono">${escHtml(u.email||'—')}</td>
         <td class="mono">${escHtml(u.username)}</td>
-        <td class="mono">${escHtml(u.password)}</td>
+        <td class="mono" style="font-size:11px;">${pwDisplay}</td>
         <td>${count}</td>
         <td class="row-actions">
-          <button class="btn btn-sm btn-ghost" onclick="copyText('${u.username} / ${u.password}','Credential copied')">Copy</button>
+          <button class="btn btn-sm btn-ghost" onclick="copyText('${u.username}${u.password?' / '+u.password:''}','Credential copied')">Copy</button>
           <button class="btn btn-sm btn-danger" onclick="removeHpo(${i})">Remove</button>
         </td>
       </tr>`;
     }).join('')}</tbody>`;
 }
+async function changePassword(){
+  const current = document.getElementById('cpCurrent').value;
+  const newPw = document.getElementById('cpNew').value;
+  const errEl = document.getElementById('cpErr');
+  if(!current){ errEl.textContent = 'Please enter your current password.'; return; }
+  if(!newPw || newPw.length < 6){ errEl.textContent = 'New password must be at least 6 characters.'; return; }
+  try{
+    const r = await fetch('/api/change-password', {method:'POST', headers: authHeaders(), body: JSON.stringify({currentPassword:current, newPassword:newPw})});
+    const data = await r.json();
+    if(!r.ok){ errEl.textContent = data.error || 'Failed to change password'; return; }
+    document.getElementById('cpCurrent').value = '';
+    document.getElementById('cpNew').value = '';
+    errEl.textContent = '';
+    toast('Password changed successfully');
+  }catch(e){ errEl.textContent = 'Network error.'; }
+}
 function saveAdminEmail(){
   const email = document.getElementById('adminGoogleEmail').value.trim();
-  accounts.admin.email = email;
-  saveAccounts();
-  toast(email ? 'Admin Google email saved' : 'Admin Google email cleared');
+  fetch('/api/admin-email', {method:'POST', headers: authHeaders(), body: JSON.stringify({email})})
+    .then(r=>r.json()).then(d=>{
+      if(d.success){ accounts.admin.email = email; toast(email ? 'Admin Google email saved' : 'Admin Google email cleared'); }
+      else toast('Failed to save', true);
+    }).catch(()=>toast('Network error', true));
 }
 function randomPassword(len=10){
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
@@ -1264,31 +1296,44 @@ function randomPassword(len=10){
   for(let i=0;i<len;i++) out += chars[arr[i]%chars.length];
   return out;
 }
-function generateHpoCredential(){
+async function generateHpoCredential(){
   const name = document.getElementById('newHpoName').value.trim();
   const territory = document.getElementById('newHpoTerritory').value.trim();
   const email = document.getElementById('newHpoEmail').value.trim();
   if(!name){ toast("Enter the HPO's full name", true); return; }
-  const username = name.toLowerCase().replace(/[^a-z]+/g,'.').replace(/^\.+|\.+$/g,'');
-  if(accounts.hpos.some(h=>h.username===username)){ toast('A user with a similar name already exists', true); return; }
-  const password = randomPassword(10);
-  accounts.hpos.push({name, territory: territory||'Unassigned', username, password, email});
-  saveAccounts();
-  document.getElementById('newHpoName').value=''; document.getElementById('newHpoTerritory').value=''; document.getElementById('newHpoEmail').value='';
-  renderAdmin();
-  toast('Credential generated for ' + name);
+  try{
+    const r = await fetch('/api/hpo', {method:'POST', headers: authHeaders(), body: JSON.stringify({name, territory, email})});
+    const data = await r.json();
+    if(!r.ok){ toast(data.error || 'Failed to create HPO', true); return; }
+    // Add the returned HPO to local accounts cache (without password for display)
+    const hpoForList = {name: data.hpo.name, territory: data.hpo.territory, username: data.hpo.username, email: data.hpo.email || '', password: data.hpo.password};
+    accounts.hpos.push(hpoForList);
+    document.getElementById('newHpoName').value=''; document.getElementById('newHpoTerritory').value=''; document.getElementById('newHpoEmail').value='';
+    renderAdmin();
+    toast('Credential generated for ' + name + ' — password: ' + data.hpo.password);
+  }catch(e){ toast('Network error', true); }
 }
-function removeHpo(i){
+async function removeHpo(i){
   if(!confirm('Remove this HPO account? Their existing customer records will remain but will need reassignment.')) return;
-  accounts.hpos.splice(i,1);
-  saveAccounts();
-  renderAdmin();
+  try{
+    const r = await fetch('/api/hpo/' + i, {method:'DELETE', headers: authHeaders()});
+    const data = await r.json();
+    if(!r.ok){ toast(data.error || 'Failed', true); return; }
+    accounts.hpos.splice(i,1);
+    renderAdmin();
+    toast('HPO removed');
+  }catch(e){ toast('Network error', true); }
 }
 async function resetDemoData(){
   if(!confirm('This will discard ALL current data (for everyone using this CRM) and restore the original sample data and 15 HPO accounts. Continue?')) return;
-  doctors = seedDoctors(); pharmacies = seedPharmacies(); accounts = seedAccounts(); visitLogs = seedVisitLogs();
-  await Promise.all([saveDoctors(), savePharmacies(), saveAccounts(), saveVisitLogs()]);
+  doctors = seedDoctors(); pharmacies = seedPharmacies(); visitLogs = seedVisitLogs();
+  await Promise.all([saveDoctors(), savePharmacies(), saveVisitLogs()]);
   doctorSeq = doctors.length+1; pharmaSeq = pharmacies.length+1; visitLogSeq = visitLogs.length+1;
+  // Re-seed accounts server-side
+  try{
+    const r = await fetch('/api/reset', {method:'POST', headers: authHeaders()});
+    if(r.ok){ const d = await r.json(); accounts = d.accounts; }
+  }catch(e){}
   renderAdmin(); renderDashboard();
   toast('Reset to sample data');
 }
@@ -1296,6 +1341,13 @@ async function resetDemoData(){
 /* ================= INIT ================= */
 (async function init(){
   await loadAll();
+  // Restore session from stored token if available
+  const savedToken = sessionStorage.getItem('akij-crm-token');
+  if(savedToken && accounts && accounts.admin){
+    // Token exists and data loaded — note: the token might be expired server-side
+    // but we can still set it for optimistic UI; the server will reject if expired
+    authToken = savedToken;
+  }
 })();
 </script>
 </body>
