@@ -124,10 +124,35 @@ function saveAccounts(accts) {
   return writeData('accounts.json', JSON.stringify(accts));
 }
 
-// Migrate legacy plaintext passwords to hashed on startup
+// Migrate legacy plaintext passwords to hashed on startup, or seed if no accounts exist
 function migrateAccountsPasswords() {
-  const accts = loadAccounts();
-  if (!accts) return;
+  let accts = loadAccounts();
+  if (!accts) {
+    // First run — seed with sample accounts (hashed passwords)
+    accts = {
+      admin: { username: 'admin', password: hashPassword('uHoHKubDKpPK'), email: '' },
+      hpos: [
+        {name:"Tanvir Ahmed",   territory:"Mirpur",       username:"tanvir.ahmed",    password: hashPassword("nB7Kw4P7RB")},
+        {name:"Sadia Rahman",   territory:"Dhanmondi",    username:"sadia.rahman",    password: hashPassword("kfMMvy5UG3")},
+        {name:"Imran Kabir",    territory:"Uttara",       username:"imran.kabir",     password: hashPassword("sf8xq4DfZh")},
+        {name:"Nusrat Jahan",   territory:"Gulshan",      username:"nusrat.jahan",    password: hashPassword("ECmu8kDL2v")},
+        {name:"Mahfuzur Rahman",territory:"Mohammadpur",  username:"mahfuzur.rahman", password: hashPassword("DtTPuice9b")},
+        {name:"Farhana Akter",  territory:"Banani",       username:"farhana.akter",   password: hashPassword("UYmxxtU6hQ")},
+        {name:"Shakil Ahmed",   territory:"Bashundhara",  username:"shakil.ahmed",    password: hashPassword("7Lr5GyFhzU")},
+        {name:"Ruma Begum",     territory:"Motijheel",    username:"ruma.begum",      password: hashPassword("e8Cvc2fLPR")},
+        {name:"Kamrul Hasan",   territory:"Farmgate",     username:"kamrul.hasan",    password: hashPassword("MhraPmbYMp")},
+        {name:"Taslima Khatun", territory:"Wari",         username:"taslima.khatun",  password: hashPassword("7m65WMdiqu")},
+        {name:"Jubayer Islam",  territory:"Khilgaon",     username:"jubayer.islam",   password: hashPassword("CyzpPK3cNH")},
+        {name:"Sharmin Sultana",territory:"Rampura",      username:"sharmin.sultana", password: hashPassword("dhLzG7uqvF")},
+        {name:"Abdul Mannan",   territory:"Tejgaon",      username:"abdul.mannan",    password: hashPassword("uyYi4EiQNj")},
+        {name:"Rima Akter",     territory:"Savar",        username:"rima.akter",      password: hashPassword("PENTxMbTaG")},
+        {name:"Zahidul Islam",  territory:"Narayanganj",  username:"zahidul.islam",   password: hashPassword("bHXkGBBpnU")},
+      ]
+    };
+    saveAccounts(accts);
+    console.log('Seeded initial accounts');
+    return;
+  }
   let changed = false;
   if (accts.admin && accts.admin.password && !accts.admin.password.includes(':')) {
     accts.admin.password = hashPassword(accts.admin.password);
