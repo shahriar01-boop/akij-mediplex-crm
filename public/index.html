@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AKIJ CRM</title>
+<title>AKIJ Mediplex CRM</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -173,7 +173,7 @@ tr.clickable:hover td{background:var(--cyan-100);}
 <!-- Login Screen -->
 <div id="login-screen" class="login-screen">
   <div class="login-card">
-    <h1>AKIJ CRM</h1>
+    <h1>AKIJ Mediplex CRM</h1>
     <div class="sub">Sign in to your account</div>
     <div class="field"><label>Username</label><input type="text" id="login-username" placeholder="Enter username"></div>
     <div class="field"><label>Password</label><input type="password" id="login-password" placeholder="Enter password"></div>
@@ -278,7 +278,7 @@ const NAV_GROUPS = [
 
 function buildSidebar(){
   const s = document.getElementById('sidebar');
-  let h = `<div class="brand"><div class="brand-mark">A</div><div><div class="brand-name">AKIJ CRM</div><div class="brand-sub">Customer 360</div></div></div>`;
+  let h = `<div class="brand"><div class="brand-mark">A</div><div><div class="brand-name">AKIJ Mediplex</div><div class="brand-sub">Customer 360</div></div></div>`;
   h += `<div class="who"><div class="name">${esc(state.user.name)}</div><div class="role">${state.user.role.toUpperCase()}</div><button class="btn btn-sm" style="background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.2);font-size:11px;margin-top:6px;width:100%;" onclick="logout()">Sign Out</button></div>`;
   h += '<nav>';
   for(const g of NAV_GROUPS){
