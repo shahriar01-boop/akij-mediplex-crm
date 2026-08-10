@@ -393,8 +393,14 @@ async function renderCustomerList(el){
 }
 
 // ── Customer Form ──
-function showCustomerForm(id){
+async function showCustomerForm(id){
   const c = id ? state.customers.find(x=>x.id===id) : null;
+  // Fetch SO list for supervisor assignment dropdown
+  let soUsers = [];
+  const canAssign = ['super_admin','admin','sales_head','rm','am','tm'].includes(state.user?.role);
+  if(canAssign){
+    try{ const accts = await apiGet('/api/accounts'); soUsers = (accts.users||[]).filter(u=>u.role==='so'); }catch(e){}
+  }
   let h = `<div class="modal-header"><h2>${c?'Edit':'New'} Customer</h2><button class="btn btn-sm btn-outline" onclick="closeModal()">&times;</button></div>`;
   h += `<div class="modal-body">
     <div class="field-row"><div class="field-group"><label>Customer Name <span class="req">*</span></label><input id="cf-name" value="${esc(c?.name||'')}"></div>
@@ -408,7 +414,15 @@ function showCustomerForm(id){
     <div class="field-group"><label>Region</label><input id="cf-region" value="${esc(c?.region||'Dhaka')}"></div></div>
     <div class="field-row"><div class="field-group"><label>Area</label><input id="cf-area" value="${esc(c?.area||'')}"></div>
     <div class="field-group"><label>Territory</label><input id="cf-territory" value="${esc(c?.territory||'')}"></div></div>
-    <div class="field-row"><div class="field-group"><label>Salesperson</label><input id="cf-salesperson" value="${esc(c?.salesperson||'')}"></div>
+    <div class="field-row"><div class="field-group"><label>Salesperson (SO) ${canAssign?'':'<small>(assigned by supervisor)</small>'}</label>`;
+  if(canAssign && soUsers.length){
+    h += `<select id="cf-salesperson" style="width:100%;">${soUsers.map(u=>'<option value="'+esc(u.name)+'"' + ((c?.salesperson===u.name)?' selected':'') + '>'+esc(u.name)+' — '+esc(u.territory||'All')+'</option>').join('')}</select>`;
+  } else if(canAssign){
+    h += `<input id="cf-salesperson" value="${esc(c?.salesperson||'')}">`;
+  } else {
+    h += `<input id="cf-salesperson" value="${esc(c?.salesperson||'')}" readonly style="background:var(--navy-50);">`;
+  }
+  h += `</div>
     <div class="field-group"><label>Status</label><select id="cf-status"><option ${c?.status==='Active'?'selected':''}>Active</option><option ${c?.status==='Inactive'?'selected':''}>Inactive</option></select></div></div>
   </div>`;
   h += `<div class="modal-footer">
