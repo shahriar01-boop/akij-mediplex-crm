@@ -383,7 +383,7 @@ app.post('/api/accounts', authRequired, roleRequired('super_admin'), (req, res) 
   res.json({ success: true, user: { username, role, name } });
 });
 
-app.put('/api/accounts/:username', authRequired, roleRequired('super_admin'), (req, res) => {
+app.put('/api/accounts/:username', authRequired, roleRequired('super_admin', 'admin', 'sales_head'), (req, res) => {
   const accts = readJSON('accounts.json');
   if (!accts) return res.status(500).json({ error: 'Account store not initialized' });
   const idx = (accts.users || []).findIndex(u => u.username === req.params.username);

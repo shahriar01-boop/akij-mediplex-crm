@@ -210,7 +210,7 @@ tr.clickable:hover td{background:var(--cyan-100);}
 
 <script>
 // ── State ──
-let state = { user: null, token: null, currentTab: 'dashboard', customers: [], leads: [], opportunities: [], visits: [], orders: [], complaints: [], contacts: [], activities: [], accounts: [], stats: null };
+let state = { user: null, token: null, currentTab: 'dashboard', navHistory: [], customers: [], leads: [], opportunities: [], visits: [], orders: [], complaints: [], contacts: [], activities: [], callLogs: [], accounts: [], stats: null };
 
 // ── Auth ──
 async function doLogin(){
@@ -248,7 +248,7 @@ function logout(){
   fetch('/api/logout',{method:'POST',headers:{'Authorization':'Bearer '+state.token}});
   localStorage.removeItem('crm_token');
   localStorage.removeItem('crm_user');
-  state = { user: null, token: null, currentTab: 'dashboard', customers: [], leads: [], opportunities: [], visits: [], orders: [], complaints: [], contacts: [], activities: [], accounts: [], stats: null };
+  state = { user: null, token: null, currentTab: 'dashboard', navHistory: [], customers: [], leads: [], opportunities: [], visits: [], orders: [], complaints: [], contacts: [], activities: [], callLogs: [], accounts: [], stats: null };
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('app-screen').style.display = 'none';
 }
@@ -274,7 +274,7 @@ const NAV_GROUPS = [
   { label: 'CUSTOMERS', items: [{id:'customers',label:'Customers'}] },
   { label: 'SALES', items: [{id:'leads',label:'Leads'},{id:'opportunities',label:'Opportunities'},{id:'visits',label:'Visits'},{id:'orders',label:'Orders'}] },
   { label: 'SERVICE', items: [{id:'complaints',label:'Complaints'},{id:'contact-center',label:'Contact Center'}] },
-  { label: 'OPERATIONS', items: [{id:'sales-excellence',label:'Sales Excellence'}] },
+  { label: 'OPERATIONS', items: [{id:'sales-excellence',label:'Sales Excellence'},{id:'team',label:'Team'}] },
   { label: 'INSIGHTS', items: [{id:'reports',label:'Reports'}] },
 ];
 
@@ -294,7 +294,19 @@ function buildSidebar(){
 }
 
 function navigate(tab){
+  if(state.currentTab !== tab){
+    state.navHistory.push(state.currentTab);
+    if(state.navHistory.length > 20) state.navHistory.shift();
+  }
   state.currentTab = tab;
+  buildSidebar();
+  renderPage();
+}
+
+function goBack(){
+  if(state.navHistory.length === 0) return;
+  const prev = state.navHistory.pop();
+  state.currentTab = prev;
   buildSidebar();
   renderPage();
 }
@@ -305,17 +317,21 @@ async function renderPage(){
   const content = document.getElementById('page-content');
   const actions = document.getElementById('header-actions');
   actions.innerHTML = '';
+  if(state.navHistory.length > 0){
+    actions.innerHTML = '<button class="btn btn-outline btn-sm" onclick="goBack()">← Back</button>&nbsp;';
+  }
 
   switch(state.currentTab){
     case 'dashboard': title.textContent='Dashboard'; await renderDashboard(content); break;
-    case 'customers': title.textContent='Customers'; renderCustomerList(content); actions.innerHTML='<button class="btn btn-primary btn-sm" onclick="showCustomerForm()">+ Add Customer</button>'; break;
-    case 'leads': title.textContent='Leads'; renderLeadList(content); actions.innerHTML='<button class="btn btn-primary btn-sm" onclick="showLeadForm()">+ Add Lead</button>'; break;
-    case 'opportunities': title.textContent='Opportunities'; renderOpportunityList(content); actions.innerHTML='<button class="btn btn-primary btn-sm" onclick="showOppForm()">+ Add Opportunity</button>'; break;
-    case 'visits': title.textContent='Visits'; renderVisitList(content); actions.innerHTML='<button class="btn btn-primary btn-sm" onclick="showVisitForm()">+ Log Visit</button>'; break;
-    case 'orders': title.textContent='Orders'; renderOrderList(content); actions.innerHTML='<button class="btn btn-primary btn-sm" onclick="showOrderForm()">+ New Order</button>'; break;
-    case 'complaints': title.textContent='Complaints'; renderComplaintList(content); actions.innerHTML='<button class="btn btn-primary btn-sm" onclick="showComplaintForm()">+ Register Complaint</button>'; break;
+    case 'customers': title.textContent='Customers'; renderCustomerList(content); actions.innerHTML+='<button class="btn btn-primary btn-sm" onclick="showCustomerForm()">+ Add Customer</button>'; break;
+    case 'leads': title.textContent='Leads'; renderLeadList(content); actions.innerHTML+='<button class="btn btn-primary btn-sm" onclick="showLeadForm()">+ Add Lead</button>'; break;
+    case 'opportunities': title.textContent='Opportunities'; renderOpportunityList(content); actions.innerHTML+='<button class="btn btn-primary btn-sm" onclick="showOppForm()">+ Add Opportunity</button>'; break;
+    case 'visits': title.textContent='Visits'; renderVisitList(content); actions.innerHTML+='<button class="btn btn-primary btn-sm" onclick="showVisitForm()">+ Log Visit</button>'; break;
+    case 'orders': title.textContent='Orders'; renderOrderList(content); actions.innerHTML+='<button class="btn btn-primary btn-sm" onclick="showOrderForm()">+ New Order</button>'; break;
+    case 'complaints': title.textContent='Complaints'; renderComplaintList(content); actions.innerHTML+='<button class="btn btn-primary btn-sm" onclick="showComplaintForm()">+ Register Complaint</button>'; break;
     case 'contact-center': title.textContent='Contact Center'; renderContactCenter(content); break;
     case 'sales-excellence': title.textContent='Sales Excellence'; renderSalesExcellence(content); break;
+    case 'team': title.textContent='Team Management'; renderTeam(content); break;
     case 'reports': title.textContent='Reports'; renderReports(content); break;
     case 'customer-360': break;
   }
@@ -1061,6 +1077,111 @@ function renderSalesExcellence(el){
       <button class="btn btn-sm btn-outline" disabled style="margin-left:8px">View Reports</button>
     </div>
   </div>`;
+}
+
+// ── Team Management ──
+async function renderTeam(el){
+  try{ state.accounts = await apiGet('/api/accounts'); }catch(e){}
+  const accts = state.accounts || { users: [] };
+  const salesHeads = (accts.users||[]).filter(u=>u.role==='sales_head');
+  const sos = (accts.users||[]).filter(u=>u.role==='so');
+  try{ state.customers = state.customers.length ? state.customers : await apiGet('/api/customers'); }catch(e){}
+
+  let h = '';
+
+  // Supervisor → Team Members mapping
+  h += '<div class="section-panel"><h2>Supervisor → Team Member Assignments</h2><div class="table-wrap"><table><thead><tr><th>Supervisor</th><th>Team Members</th><th>Total SOs</th><th>Total Customers</th><th>Actions</th></tr></thead><tbody>';
+  for(const sh of salesHeads){
+    const members = sos.filter(so => so.supervisor === sh.username);
+    const custCount = members.reduce((s, so) => s + (state.customers||[]).filter(c => c.salesperson === so.name).length, 0);
+    h += `<tr>
+      <td><strong>${esc(sh.name)}</strong><br><small style="color:var(--muted)">${esc(sh.username)}</small></td>
+      <td>${members.length ? members.map(m=>`<span class="badge badge-active" style="margin:2px;">${esc(m.name)}</span>`).join(' ') : '<span style="color:var(--muted)">No members</span>'}</td>
+      <td>${members.length}</td>
+      <td>${custCount}</td>
+      <td><button class="btn btn-sm btn-outline" onclick="showTeamAssign('${sh.username}')">Manage</button></td>
+    </tr>`;
+  }
+  h += '</tbody></table></div></div>';
+
+  // All Team Members (SOs)
+  h += '<div class="section-panel"><h2>Team Members <span style="font-weight:400;font-size:13px;color:var(--muted);">(${sos.length} SOs)</span></h2><div class="table-wrap"><table><thead><tr><th>Name</th><th>Username</th><th>Territory</th><th>SBU</th><th>Supervisor</th><th>Customers</th><th>Actions</th></tr></thead><tbody>';
+  for(const so of sos){
+    const sup = salesHeads.find(sh => sh.username === so.supervisor);
+    const custCount = (state.customers||[]).filter(c => c.salesperson === so.name).length;
+    h += `<tr>
+      <td><strong>${esc(so.name)}</strong></td>
+      <td style="font-family:monospace;font-size:12px;">${esc(so.username)}</td>
+      <td>${esc(so.territory||'—')}</td>
+      <td>${esc(so.sbu||'—')}</td>
+      <td>${sup ? `<span class="badge badge-active">${esc(sup.name)}</span>` : '<span style="color:var(--muted)">Unassigned</span>'}</td>
+      <td>${custCount}</td>
+      <td><button class="btn btn-sm btn-outline" onclick="showMemberAssign('${so.username}')">Assign</button></td>
+    </tr>`;
+  }
+  h += '</tbody></table></div></div>';
+
+  el.innerHTML = h;
+}
+
+function showTeamAssign(supervisorUsername){
+  const accts = state.accounts || { users: [] };
+  const sos = (accts.users||[]).filter(u=>u.role==='so');
+  const currentMembers = sos.filter(so => so.supervisor === supervisorUsername).map(so=>so.username);
+  const sh = (accts.users||[]).find(u=>u.username===supervisorUsername);
+  let opts = sos.map(so => `<label style="display:block;padding:4px 0;cursor:pointer;"><input type="checkbox" value="${so.username}" ${currentMembers.includes(so.username)?'checked':''} style="margin-right:6px;">${esc(so.name)} (${esc(so.territory||'—')})</label>`).join('');
+
+  let h = `<div class="modal-header"><h2>Assign Team to ${esc(sh?.name||supervisorUsername)}</h2><button class="btn btn-sm btn-outline" onclick="closeModal()">&times;</button></div>`;
+  h += `<div class="modal-body"><p style="color:var(--muted);margin-bottom:12px;">Select which Sales Officers report to this supervisor.</p><div id="team-checkboxes">${opts}</div></div>`;
+  h += `<div class="modal-footer"><button class="btn btn-outline btn-sm" onclick="closeModal()">Cancel</button><button class="btn btn-primary btn-sm" onclick="saveTeamAssign('${supervisorUsername}')">Save</button></div>`;
+  document.getElementById('modal').innerHTML = h;
+  document.getElementById('modal-overlay').classList.add('show');
+}
+
+async function saveTeamAssign(supervisorUsername){
+  const checks = document.querySelectorAll('#team-checkboxes input[type=checkbox]');
+  const usernames = [];
+  checks.forEach(cb => { if(cb.checked) usernames.push(cb.value); });
+  try{
+    for(const uname of usernames){
+      await apiPut('/api/accounts/'+uname, { supervisor: supervisorUsername });
+    }
+    // Remove supervisor from unchecked SOs
+    const accts = await apiGet('/api/accounts');
+    const sos = (accts.users||[]).filter(u=>u.role==='so');
+    for(const so of sos){
+      if(so.supervisor === supervisorUsername && !usernames.includes(so.username)){
+        await apiPut('/api/accounts/'+so.username, { supervisor: '' });
+      }
+    }
+    closeModal();
+    state.accounts = await apiGet('/api/accounts');
+    renderTeam(document.getElementById('page-content'));
+  }catch(e){ alert(e.message); }
+}
+
+function showMemberAssign(soUsername){
+  const accts = state.accounts || { users: [] };
+  const salesHeads = (accts.users||[]).filter(u=>u.role==='sales_head');
+  const so = (accts.users||[]).find(u=>u.username===soUsername);
+  let opts = salesHeads.map(sh => `<option value="${sh.username}" ${so?.supervisor===sh.username?'selected':''}>${esc(sh.name)}</option>`).join('');
+  opts = '<option value="">— Unassigned —</option>' + opts;
+
+  let h = `<div class="modal-header"><h2>Assign Supervisor to ${esc(so?.name||soUsername)}</h2><button class="btn btn-sm btn-outline" onclick="closeModal()">&times;</button></div>`;
+  h += `<div class="modal-body"><p style="color:var(--muted);margin-bottom:12px;">Select which Sales Head supervises this team member.</p><div class="field-group"><label>Supervisor</label><select id="member-supervisor">${opts}</select></div></div>`;
+  h += `<div class="modal-footer"><button class="btn btn-outline btn-sm" onclick="closeModal()">Cancel</button><button class="btn btn-primary btn-sm" onclick="saveMemberAssign('${soUsername}')">Save</button></div>`;
+  document.getElementById('modal').innerHTML = h;
+  document.getElementById('modal-overlay').classList.add('show');
+}
+
+async function saveMemberAssign(soUsername){
+  const supervisor = document.getElementById('member-supervisor').value;
+  try{
+    await apiPut('/api/accounts/'+soUsername, { supervisor });
+    closeModal();
+    state.accounts = await apiGet('/api/accounts');
+    renderTeam(document.getElementById('page-content'));
+  }catch(e){ alert(e.message); }
 }
 
 // ── Reports ──
