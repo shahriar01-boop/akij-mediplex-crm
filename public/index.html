@@ -113,6 +113,7 @@ tr.clickable:hover td{background:var(--cyan-100);}
 .badge-green{background:var(--green-100);color:var(--green);}
 .badge-amber{background:var(--amber-100);color:var(--amber);}
 .badge-red{background:var(--red-100);color:var(--red);}
+.id-tag{font-family:'IBM Plex Mono',monospace;font-size:11px;background:var(--navy-100);color:var(--navy);padding:2px 6px;border-radius:4px;}
 .badge-dispatched{background:var(--purple-100);color:var(--purple);}
 .badge-delivered{background:var(--green-100);color:var(--green);}
 .badge-open{background:var(--red-100);color:var(--red);}
@@ -933,15 +934,116 @@ async function saveComplaint(id){
 }
 
 // ── Contact Center ──
-function renderContactCenter(el){
-  el.innerHTML = `<div class="section-panel"><h2>Contact Center</h2>
-    <p style="color:var(--muted)">Inbound/outbound call logging, telesales, and agent performance tracking.</p>
-    <div style="margin-top:16px"><strong>Future features:</strong> Call logging, IVR integration, ViciDial sync, Agent dashboard.</div>
-    <div style="margin-top:12px;display:flex;gap:8px">
-      <button class="btn btn-sm btn-primary" disabled>Log Inbound Call</button>
-      <button class="btn btn-sm btn-outline" disabled>Start Outbound</button>
+async function renderContactCenter(el){
+  try{ state.callLogs = await apiGet('/api/callLogs'); }catch(e){ state.callLogs = []; }
+  try{ state.customers = state.customers.length ? state.customers : await apiGet('/api/customers'); }catch(e){}
+  const fmt = n => n ? n.toLocaleString() : '0';
+  const now = new Date().toISOString().slice(0, 16);
+
+  // Agent performance summary
+  const agents = [...new Set(state.callLogs.map(c => c.agentName).filter(Boolean))];
+  const agentStats = agents.map(a => {
+    const calls = state.callLogs.filter(c => c.agentName === a);
+    return { name: a, total: calls.length, inbound: calls.filter(c => c.type === 'inbound').length, outbound: calls.filter(c => c.type === 'outbound').length };
+  }).sort((a, b) => b.total - a.total);
+
+  let h = '';
+
+  // Agent performance cards
+  if(agentStats.length > 0){
+    h += '<div class="stats-grid">';
+    for(const a of agentStats.slice(0, 6)){
+      h += `<div class="stat-card cyan"><div class="label">${esc(a.name)}</div><div class="value" style="font-size:20px;">${a.total} calls</div><div class="sub">${a.inbound} inbound · ${a.outbound} outbound</div></div>`;
+    }
+    h += '</div>';
+  }
+
+  // Log call form
+  h += `<div class="section-panel"><h2>Log a Call</h2>
+    <div class="field-row">
+      <div class="field-group"><label>Type</label><select id="cc-type"><option>inbound</option><option>outbound</option></select></div>
+      <div class="field-group"><label>Caller Name</label><input id="cc-caller" placeholder="Customer name"></div>
+      <div class="field-group"><label>Phone</label><input id="cc-phone" placeholder="01XXXXXXXXX"></div>
+    </div>
+    <div class="field-row">
+      <div class="field-group"><label>Linked Customer</label><select id="cc-customer"><option value="">— None —</option>${(state.customers||[]).map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('')}</select></div>
+      <div class="field-group"><label>Purpose</label><input id="cc-purpose" placeholder="e.g. Product inquiry, complaint follow-up"></div>
+      <div class="field-group"><label>Duration (min)</label><input id="cc-duration" type="number" value="5" min="1"></div>
+    </div>
+    <div class="field-row">
+      <div class="field-group"><label>Outcome</label><select id="cc-outcome"><option>Resolved</option><option>Follow-up Required</option><option>Transferred</option><option>No Answer</option><option>Callback Scheduled</option></select></div>
+      <div class="field-group"><label>Priority</label><select id="cc-priority"><option>Low</option><option>Medium</option><option selected>High</option><option>Urgent</option></select></div>
+    </div>
+    <div class="field-row full"><div class="field-group"><label>Notes</label><textarea id="cc-notes" rows="2" placeholder="Call summary..."></textarea></div></div>
+    <div style="margin-top:10px;display:flex;gap:8px;">
+      <button class="btn btn-primary btn-sm" onclick="logCall()">📞 Log Call</button>
+      <button class="btn btn-outline btn-sm" onclick="document.getElementById('cc-type').value='outbound';document.getElementById('cc-purpose').focus()">Start Outbound</button>
     </div>
   </div>`;
+
+  // Call log table
+  const search = (document.getElementById('cc-search')?.value||'').toLowerCase();
+  const fType = document.getElementById('cc-filter-type')?.value||'';
+  let filtered = state.callLogs;
+  if(search) filtered = filtered.filter(c => (c.callerName||'').toLowerCase().includes(search) || (c.purpose||'').toLowerCase().includes(search) || (c.notes||'').toLowerCase().includes(search));
+  if(fType) filtered = filtered.filter(c => c.type === fType);
+
+  h += `<div class="section-panel"><h2>Call Log <span style="font-weight:400;font-size:13px;color:var(--muted);">${filtered.length} calls</span></h2>
+    <div class="search-bar">
+      <input type="text" id="cc-search" placeholder="Search calls..." oninput="renderContactCenter(document.getElementById('page-content'))">
+      <select id="cc-filter-type" onchange="renderContactCenter(document.getElementById('page-content'))"><option value="">All Types</option><option value="inbound">Inbound</option><option value="outbound">Outbound</option></select>
+    </div>
+    <div class="table-wrap"><table><thead><tr><th>ID</th><th>Type</th><th>Caller</th><th>Phone</th><th>Purpose</th><th>Outcome</th><th>Agent</th><th>Duration</th><th>Priority</th><th>Time</th><th></th></tr></thead><tbody>`;
+
+  for(const c of filtered.slice(-50).reverse()){
+    const dt = new Date(c.createdAt).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+    const prioClass = c.priority === 'Urgent' ? 'red' : c.priority === 'High' ? 'amber' : '';
+    h += `<tr>
+      <td><span class="id-tag">${c.id}</span></td>
+      <td><span class="badge ${c.type==='inbound'?'badge-active':'badge-new'}">${c.type}</span></td>
+      <td><strong>${esc(c.callerName||'—')}</strong></td>
+      <td>${esc(c.callerPhone||'—')}</td>
+      <td style="max-width:180px;white-space:normal;">${esc(c.purpose||'—')}</td>
+      <td><span class="badge ${c.outcome==='Resolved'?'badge-active':c.outcome==='Follow-up Required'?'badge-amber':''}">${esc(c.outcome||'—')}</span></td>
+      <td>${esc(c.agentName||'—')}</td>
+      <td>${c.duration||0}m</td>
+      <td>${prioClass?`<span class="badge badge-${prioClass}">${c.priority}</span>`:c.priority||'—'}</td>
+      <td>${dt}</td>
+      <td><button class="btn btn-sm btn-outline" onclick="deleteCall('${c.id}')">Del</button></td>
+    </tr>`;
+  }
+  h += '</tbody></table></div></div>';
+
+  el.innerHTML = h;
+}
+
+async function logCall(){
+  const body = {
+    type: document.getElementById('cc-type').value,
+    callerName: document.getElementById('cc-caller').value,
+    callerPhone: document.getElementById('cc-phone').value,
+    customerId: document.getElementById('cc-customer').value || null,
+    purpose: document.getElementById('cc-purpose').value,
+    duration: parseInt(document.getElementById('cc-duration').value) || 5,
+    outcome: document.getElementById('cc-outcome').value,
+    priority: document.getElementById('cc-priority').value,
+    notes: document.getElementById('cc-notes').value,
+    agentName: state.user?.name || 'Agent'
+  };
+  if(!body.callerName){ alert('Caller name is required'); return; }
+  try{
+    await apiPost('/api/callLogs', body);
+    document.getElementById('cc-caller').value = '';
+    document.getElementById('cc-phone').value = '';
+    document.getElementById('cc-purpose').value = '';
+    document.getElementById('cc-notes').value = '';
+    renderContactCenter(document.getElementById('page-content'));
+  }catch(e){ alert(e.message); }
+}
+
+async function deleteCall(id){
+  if(!confirm('Delete this call log?')) return;
+  try{ await apiDel('/api/callLogs/'+id); renderContactCenter(document.getElementById('page-content')); }catch(e){ alert(e.message); }
 }
 
 // ── Sales Excellence ──

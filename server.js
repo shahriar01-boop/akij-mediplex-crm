@@ -140,7 +140,7 @@ function initAccounts() {
 initAccounts();
 
 // Wipe all data files except accounts on startup
-const DATA_FILES = ['customers','leads','opportunities','visits','orders','complaints','contacts','activities','targets'];
+const DATA_FILES = ['customers','leads','opportunities','visits','orders','complaints','contacts','activities','targets','callLogs'];
 for (const name of DATA_FILES) {
   writeJSON(`${name}.json`, []);
 }
@@ -306,7 +306,7 @@ function crudRoutes(entityName, routePath) {
 
   app.post(`/api/${routePath}`, authRequired, (req, res) => {
     const data = readJSON(`${entityName}.json`) || [];
-    const prefix = entityName === 'customers' ? 'CUS' : entityName === 'leads' ? 'LEAD' : entityName === 'opportunities' ? 'OPP' : entityName === 'visits' ? 'VIS' : entityName === 'orders' ? 'ORD' : entityName === 'complaints' ? 'CMP' : entityName === 'contacts' ? 'CONT' : 'ACT';
+    const prefix = entityName === 'customers' ? 'CUS' : entityName === 'leads' ? 'LEAD' : entityName === 'opportunities' ? 'OPP' : entityName === 'visits' ? 'VIS' : entityName === 'orders' ? 'ORD' : entityName === 'complaints' ? 'CMP' : entityName === 'contacts' ? 'CONT' : entityName === 'callLogs' ? 'CALL' : 'ACT';
     const newItem = { id: nextId(prefix), ...req.body, createdAt: new Date().toISOString().slice(0, 10), updatedAt: new Date().toISOString().slice(0, 10) };
     data.push(newItem);
     writeJSON(`${entityName}.json`, data);
@@ -343,6 +343,7 @@ crudRoutes('orders', 'orders');
 crudRoutes('complaints', 'complaints');
 crudRoutes('contacts', 'contacts');
 crudRoutes('activities', 'activities');
+crudRoutes('callLogs', 'callLogs');
 
 // ── Customer 360 ──
 app.get('/api/customer/:id/360', authRequired, (req, res) => {
