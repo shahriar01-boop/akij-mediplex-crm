@@ -73,7 +73,8 @@ nav{display:flex;flex-direction:column;gap:1px;flex:1;}
 
 /* Cards */
 .stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-bottom:24px;}
-.stat-card{background:var(--paper);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow);border-left:3px solid var(--navy);}
+.stat-card{background:var(--paper);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow);border-left:3px solid var(--navy);cursor:pointer;transition:transform .1s ease,box-shadow .15s ease;}
+.stat-card:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(46,49,146,0.14);}
 .stat-card.cyan{border-left-color:var(--cyan);}
 .stat-card.green{border-left-color:var(--green);}
 .stat-card.amber{border-left-color:var(--amber);}
@@ -328,20 +329,20 @@ async function renderDashboard(el){
   if(!s){ el.innerHTML='<div class="section-panel"><p>Loading stats...</p></div>'; return; }
   const fmt = n => n ? n.toLocaleString() : '0';
   let h = '<div class="stats-grid">';
-  h += `<div class="stat-card"><div class="label">Total Customers</div><div class="value">${s.customers.total}</div><div class="sub">${s.customers.active} active · ${s.customers.inactive} inactive</div></div>`;
-  h += `<div class="stat-card cyan"><div class="label">New This Month</div><div class="value">${s.customers.newThisMonth}</div><div class="sub">Customer acquisitions</div></div>`;
-  h += `<div class="stat-card"><div class="label">Open Leads</div><div class="value">${s.leads.open}</div><div class="sub">${s.leads.converted} converted · ${s.leads.followUpDue} follow-up due</div></div>`;
-  h += `<div class="stat-card green"><div class="label">Pipeline Value</div><div class="value">${fmt(Math.round(s.opportunities.pipelineValue))}</div><div class="sub">${s.opportunities.open} open opportunities</div></div>`;
-  h += `<div class="stat-card amber"><div class="label">Pending Orders</div><div class="value">${s.orders.pending}</div><div class="sub">${fmt(s.orders.outstanding)} outstanding</div></div>`;
-  h += `<div class="stat-card green"><div class="label">Total Sales</div><div class="value">${fmt(s.orders.totalSales)}</div><div class="sub">${s.orders.total} total orders</div></div>`;
-  h += `<div class="stat-card red"><div class="label">Open Complaints</div><div class="value">${s.complaints.open}</div><div class="sub">${s.complaints.total} total · CSAT ${s.complaints.avgCsat}/5</div></div>`;
-  h += `<div class="stat-card cyan"><div class="label">Visits This Month</div><div class="value">${s.visits.thisMonth}</div><div class="sub">${s.visits.total} total visits</div></div>`;
+  h += `<div class="stat-card" onclick="navigate('customers')"><div class="label">Total Customers</div><div class="value">${s.customers.total}</div><div class="sub">${s.customers.active} active · ${s.customers.inactive} inactive</div></div>`;
+  h += `<div class="stat-card cyan" onclick="navigate('customers')"><div class="label">New This Month</div><div class="value">${s.customers.newThisMonth}</div><div class="sub">Customer acquisitions</div></div>`;
+  h += `<div class="stat-card" onclick="navigate('leads')"><div class="label">Open Leads</div><div class="value">${s.leads.open}</div><div class="sub">${s.leads.converted} converted · ${s.leads.followUpDue} follow-up due</div></div>`;
+  h += `<div class="stat-card green" onclick="navigate('opportunities')"><div class="label">Pipeline Value</div><div class="value">${fmt(Math.round(s.opportunities.pipelineValue))}</div><div class="sub">${s.opportunities.open} open opportunities</div></div>`;
+  h += `<div class="stat-card amber" onclick="navigate('orders')"><div class="label">Pending Orders</div><div class="value">${s.orders.pending}</div><div class="sub">${fmt(s.orders.outstanding)} outstanding</div></div>`;
+  h += `<div class="stat-card green" onclick="navigate('orders')"><div class="label">Total Sales</div><div class="value">${fmt(s.orders.totalSales)}</div><div class="sub">${s.orders.total} total orders</div></div>`;
+  h += `<div class="stat-card red" onclick="navigate('complaints')"><div class="label">Open Complaints</div><div class="value">${s.complaints.open}</div><div class="sub">${s.complaints.total} total · CSAT ${s.complaints.avgCsat}/5</div></div>`;
+  h += `<div class="stat-card cyan" onclick="navigate('visits')"><div class="label">Visits This Month</div><div class="value">${s.visits.thisMonth}</div><div class="sub">${s.visits.total} total visits</div></div>`;
   h += '</div>';
 
   h += '<div class="section-panel"><h2>Salesperson Performance</h2><div class="table-wrap"><table><thead><tr><th>Salesperson</th><th>Customers</th><th>Visits</th><th>Target (৳)</th><th>Achieved (৳)</th><th>% Achievement</th><th>AI Suggestion</th></tr></thead><tbody>';
   for(const sp of s.spPerformance.slice(0,15)){
     const pctClass = sp.pctAchievement >= 100 ? 'green' : sp.pctAchievement >= 70 ? 'amber' : 'red';
-    h += `<tr>
+    h += `<tr style="cursor:pointer;" onclick="document.getElementById('cust-search')? (document.getElementById('cust-search').value='${esc(sp.name).replace(/'/g,"\\'")}',navigate('customers')) : navigate('customers')">
       <td><strong>${esc(sp.name)}</strong></td>
       <td>${sp.customers}</td>
       <td>${sp.visits} / ${sp.targetVisits}</td>
