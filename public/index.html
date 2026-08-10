@@ -1063,20 +1063,171 @@ async function deleteCall(id){
 }
 
 // ── Sales Excellence ──
-function renderSalesExcellence(el){
-  el.innerHTML = `<div class="section-panel"><h2>Sales Excellence</h2>
-    <p style="color:var(--muted)">Distributor/dealer management, market & outlet audits, target vs achievement, stock availability monitoring.</p>
-    <div class="stats-grid" style="margin-top:16px">
-      <div class="stat-card"><div class="label">Target Achievement</div><div class="value">82%</div><div class="sub">Monthly target: 25,00,000 BDT</div></div>
-      <div class="stat-card green"><div class="label">Market Audits</div><div class="value">12</div><div class="sub">This month</div></div>
-      <div class="stat-card cyan"><div class="label">Outlet Audits</div><div class="value">45</div><div class="sub">This month</div></div>
-      <div class="stat-card amber"><div class="label">Stock Gaps</div><div class="value">3</div><div class="sub">Stores below threshold</div></div>
+async function renderSalesExcellence(el){
+  try{ state.audits = await apiGet('/api/audits'); }catch(e){ state.audits = []; }
+  try{ state.competitors = await apiGet('/api/competitors'); }catch(e){ state.competitors = []; }
+  try{ state.customers = state.customers.length ? state.customers : await apiGet('/api/customers'); }catch(e){}
+
+  const now = new Date();
+  const thisMonth = now.toISOString().slice(0, 7);
+  const monthAudits = state.audits.filter(a => (a.createdAt||'').startsWith(thisMonth));
+  const marketAudits = monthAudits.filter(a => a.type === 'market');
+  const outletAudits = monthAudits.filter(a => a.type === 'outlet');
+  const fmt = n => n?.toLocaleString() || '0';
+
+  let h = '';
+
+  // KPI cards
+  h += '<div class="stats-grid">';
+  h += `<div class="stat-card"><div class="label">Market Audits</div><div class="value">${marketAudits.length}</div><div class="sub">This month</div></div>`;
+  h += `<div class="stat-card cyan"><div class="label">Outlet Audits</div><div class="value">${outletAudits.length}</div><div class="sub">This month</div></div>`;
+  h += `<div class="stat-card green"><div class="label">Competitors Tracked</div><div class="value">${state.competitors.length}</div><div class="sub">Total in database</div></div>`;
+  h += `<div class="stat-card amber"><div class="label">Audit Findings</div><div class="value">${monthAudits.filter(a=>a.findings).length}</div><div class="sub">With observations</div></div>`;
+  h += '</div>';
+
+  // Quick actions
+  h += '<div class="section-panel"><h2>Quick Actions</h2>';
+  h += '<div style="display:flex;gap:8px;flex-wrap:wrap;">';
+  h += '<button class="btn btn-primary btn-sm" onclick="showAuditForm()">+ New Audit</button>';
+  h += '<button class="btn btn-outline btn-sm" onclick="showCompetitorForm()">+ Add Competitor</button>';
+  h += '</div></div>';
+
+  // Audit list
+  const aSearch = (document.getElementById('se-search')?.value||'').toLowerCase();
+  const aType = document.getElementById('se-filter-type')?.value||'';
+  let filtered = state.audits;
+  if(aSearch) filtered = filtered.filter(a => (a.outletName||'').toLowerCase().includes(aSearch) || (a.findings||'').toLowerCase().includes(aSearch));
+  if(aType) filtered = filtered.filter(a => a.type === aType);
+
+  h += `<div class="section-panel"><h2>Audit Log <span style="font-weight:400;font-size:13px;color:var(--muted);">${filtered.length} entries</span></h2>
+    <div class="search-bar">
+      <input type="text" id="se-search" placeholder="Search audits..." oninput="renderSalesExcellence(document.getElementById('page-content'))">
+      <select id="se-filter-type" onchange="renderSalesExcellence(document.getElementById('page-content'))"><option value="">All Types</option><option value="market">Market</option><option value="outlet">Outlet</option></select>
     </div>
-    <div style="margin-top:12px">
-      <button class="btn btn-sm btn-primary" disabled>New Audit</button>
-      <button class="btn btn-sm btn-outline" disabled style="margin-left:8px">View Reports</button>
-    </div>
-  </div>`;
+    <div class="table-wrap"><table><thead><tr><th>ID</th><th>Type</th><th>Outlet/Location</th><th>Auditor</th><th>Score</th><th>Findings</th><th>Date</th><th></th></tr></thead><tbody>`;
+
+  for(const a of filtered.slice(-30).reverse()){
+    const scoreClass = (a.score||0) >= 80 ? 'green' : (a.score||0) >= 60 ? 'amber' : 'red';
+    h += `<tr>
+      <td><span class="id-tag">${a.id}</span></td>
+      <td><span class="badge ${a.type==='market'?'badge-active':'badge-new'}">${a.type}</span></td>
+      <td><strong>${esc(a.outletName||'—')}</strong></td>
+      <td>${esc(a.auditor||'—')}</td>
+      <td>${a.score ? `<span class="badge badge-${scoreClass}">${a.score}%</span>` : '—'}</td>
+      <td style="max-width:200px;white-space:normal;font-size:12px;">${esc(a.findings||'—')}</td>
+      <td>${(a.createdAt||'').slice(0,10)}</td>
+      <td><button class="btn btn-sm btn-outline" onclick="deleteAudit('${a.id}')">Del</button></td>
+    </tr>`;
+  }
+  h += '</tbody></table></div></div>';
+
+  // Competitor intelligence
+  h += `<div class="section-panel"><h2>Competitor Intelligence <span style="font-weight:400;font-size:13px;color:var(--muted);">${state.competitors.length} tracked</span></h2>
+    <div class="table-wrap"><table><thead><tr><th>ID</th><th>Competitor</th><th>Brand/Product</th><th>Retail Price</th><th>Trade Price</th><th>Margin</th><th>Promotions</th><th>Outlet</th><th>Date</th><th></th></tr></thead><tbody>`;
+
+  for(const c of state.competitors.slice(-20).reverse()){
+    h += `<tr>
+      <td><span class="id-tag">${c.id}</span></td>
+      <td><strong>${esc(c.competitorName||'—')}</strong></td>
+      <td>${esc(c.brandProduct||'—')}</td>
+      <td>${c.retailPrice ? fmt(c.retailPrice) : '—'}</td>
+      <td>${c.tradePrice ? fmt(c.tradePrice) : '—'}</td>
+      <td>${c.margin ? c.margin+'%' : '—'}</td>
+      <td style="max-width:150px;white-space:normal;font-size:11px;">${esc(c.promotions||'—')}</td>
+      <td>${esc(c.outletName||'—')}</td>
+      <td>${(c.createdAt||'').slice(0,10)}</td>
+      <td><button class="btn btn-sm btn-outline" onclick="deleteCompetitor('${c.id}')">Del</button></td>
+    </tr>`;
+  }
+  h += '</tbody></table></div></div>';
+
+  el.innerHTML = h;
+}
+
+// Audit form
+function showAuditForm(id){
+  const a = id ? state.audits.find(x=>x.id===id) : null;
+  let h = `<div class="modal-header"><h2>${id?'Edit':'New'} Audit</h2><button class="btn btn-sm btn-outline" onclick="closeModal()">&times;</button></div>`;
+  h += '<div class="modal-body">';
+  h += `<div class="field-row"><div class="field-group"><label>Type</label><select id="af-type"><option ${a?.type==='market'?'selected':''}>market</option><option ${a?.type==='outlet'?'selected':''}>outlet</option></select></div>
+    <div class="field-group"><label>Outlet / Location</label><input id="af-outlet" value="${esc(a?.outletName||'')}"></div>
+    <div class="field-group"><label>Auditor</label><input id="af-auditor" value="${esc(a?.auditor||state.user?.name||'')}"></div></div>`;
+  h += `<div class="field-row"><div class="field-group"><label>Compliance Score (%)</label><input type="number" id="af-score" value="${a?.score||''}" min="0" max="100"></div>
+    <div class="field-group"><label>Stock Level</label><select id="af-stock"><option ${a?.stockLevel==='Adequate'?'selected':''}>Adequate</option><option ${a?.stockLevel==='Low'?'selected':''}>Low</option><option ${a?.stockLevel==='Stockout'?'selected':''}>Stockout</option></select></div></div>`;
+  h += `<div class="field-row full"><div class="field-group"><label>Findings / Observations</label><textarea id="af-findings" rows="3">${esc(a?.findings||'')}</textarea></div></div>`;
+  h += `<div class="field-row full"><div class="field-group"><label>Recommendations</label><textarea id="af-recommendations" rows="2">${esc(a?.recommendations||'')}</textarea></div></div>`;
+  h += `</div><div class="modal-footer"><button class="btn btn-outline btn-sm" onclick="closeModal()">Cancel</button><button class="btn btn-primary btn-sm" onclick="saveAudit('${a?.id||''}')">Save Audit</button></div>`;
+  document.getElementById('modal').innerHTML = h;
+  document.getElementById('modal-overlay').classList.add('show');
+}
+
+async function saveAudit(id){
+  const body = {
+    type: document.getElementById('af-type').value,
+    outletName: document.getElementById('af-outlet').value,
+    auditor: document.getElementById('af-auditor').value,
+    score: parseInt(document.getElementById('af-score').value) || 0,
+    stockLevel: document.getElementById('af-stock').value,
+    findings: document.getElementById('af-findings').value,
+    recommendations: document.getElementById('af-recommendations').value,
+  };
+  if(!body.outletName){ alert('Outlet/Location is required'); return; }
+  try{
+    if(id) await apiPut('/api/audits/'+id, body);
+    else await apiPost('/api/audits', body);
+    closeModal();
+    renderSalesExcellence(document.getElementById('page-content'));
+  }catch(e){ alert(e.message); }
+}
+
+async function deleteAudit(id){
+  if(!confirm('Delete this audit?')) return;
+  try{ await apiDel('/api/audits/'+id); renderSalesExcellence(document.getElementById('page-content')); }catch(e){ alert(e.message); }
+}
+
+// Competitor form
+function showCompetitorForm(id){
+  const c = id ? state.competitors.find(x=>x.id===id) : null;
+  let h = `<div class="modal-header"><h2>${id?'Edit':'Add'} Competitor Intel</h2><button class="btn btn-sm btn-outline" onclick="closeModal()">&times;</button></div>`;
+  h += '<div class="modal-body">';
+  h += `<div class="field-row"><div class="field-group"><label>Competitor Name</label><input id="cf-comp-name" value="${esc(c?.competitorName||'')}"></div>
+    <div class="field-group"><label>Brand / Product</label><input id="cf-brand" value="${esc(c?.brandProduct||'')}"></div></div>`;
+  h += `<div class="field-row"><div class="field-group"><label>Retail Price (BDT)</label><input type="number" id="cf-retail" value="${c?.retailPrice||''}"></div>
+    <div class="field-group"><label>Trade Price (BDT)</label><input type="number" id="cf-trade" value="${c?.tradePrice||''}"></div>
+    <div class="field-group"><label>Margin (%)</label><input type="number" id="cf-margin" value="${c?.margin||''}"></div></div>`;
+  h += `<div class="field-row"><div class="field-group"><label>Top SKUs</label><input id="cf-skus" value="${esc(c?.topSkus||'')}"></div>
+    <div class="field-group"><label>Outlet / Location</label><input id="cf-outlet" value="${esc(c?.outletName||'')}"></div></div>`;
+  h += `<div class="field-row full"><div class="field-group"><label>Promotions / Visibility</label><textarea id="cf-promo" rows="2">${esc(c?.promotions||'')}</textarea></div></div>`;
+  h += `<div class="field-row full"><div class="field-group"><label>Observations</label><textarea id="cf-notes" rows="2">${esc(c?.notes||'')}</textarea></div></div>`;
+  h += `</div><div class="modal-footer"><button class="btn btn-outline btn-sm" onclick="closeModal()">Cancel</button><button class="btn btn-primary btn-sm" onclick="saveCompetitor('${c?.id||''}')">Save</button></div>`;
+  document.getElementById('modal').innerHTML = h;
+  document.getElementById('modal-overlay').classList.add('show');
+}
+
+async function saveCompetitor(id){
+  const body = {
+    competitorName: document.getElementById('cf-comp-name').value,
+    brandProduct: document.getElementById('cf-brand').value,
+    retailPrice: parseInt(document.getElementById('cf-retail').value) || 0,
+    tradePrice: parseInt(document.getElementById('cf-trade').value) || 0,
+    margin: parseInt(document.getElementById('cf-margin').value) || 0,
+    topSkus: document.getElementById('cf-skus').value,
+    outletName: document.getElementById('cf-outlet').value,
+    promotions: document.getElementById('cf-promo').value,
+    notes: document.getElementById('cf-notes').value,
+  };
+  if(!body.competitorName){ alert('Competitor name is required'); return; }
+  try{
+    if(id) await apiPut('/api/competitors/'+id, body);
+    else await apiPost('/api/competitors', body);
+    closeModal();
+    renderSalesExcellence(document.getElementById('page-content'));
+  }catch(e){ alert(e.message); }
+}
+
+async function deleteCompetitor(id){
+  if(!confirm('Delete this competitor entry?')) return;
+  try{ await apiDel('/api/competitors/'+id); renderSalesExcellence(document.getElementById('page-content')); }catch(e){ alert(e.message); }
 }
 
 // ── Team Management ──
