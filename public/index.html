@@ -109,6 +109,11 @@ tr.clickable:hover td{background:var(--cyan-100);}
 .badge-approved{background:#DBEAFE;color:#1E40AF;}
 .badge-dispatched{background:var(--purple-100);color:var(--purple);}
 .badge-delivered{background:var(--green-100);color:var(--green);}
+.badge-green{background:var(--green-100);color:var(--green);}
+.badge-amber{background:var(--amber-100);color:var(--amber);}
+.badge-red{background:var(--red-100);color:var(--red);}
+.badge-dispatched{background:var(--purple-100);color:var(--purple);}
+.badge-delivered{background:var(--green-100);color:var(--green);}
 .badge-open{background:var(--red-100);color:var(--red);}
 .badge-inprogress{background:var(--amber-100);color:var(--amber);}
 .badge-resolved{background:var(--green-100);color:var(--green);}
@@ -333,9 +338,18 @@ async function renderDashboard(el){
   h += `<div class="stat-card cyan"><div class="label">Visits This Month</div><div class="value">${s.visits.thisMonth}</div><div class="sub">${s.visits.total} total visits</div></div>`;
   h += '</div>';
 
-  h += '<div class="section-panel"><h2>Salesperson Performance <span class="count">Top performers</span></h2><div class="table-wrap"><table><thead><tr><th>Salesperson</th><th>Customers</th><th>Visits</th><th>Sales (BDT)</th></tr></thead><tbody>';
-  for(const sp of s.spPerformance.slice(0,10)){
-    h += `<tr><td><strong>${esc(sp.name)}</strong></td><td>${sp.customers}</td><td>${sp.visits}</td><td>${fmt(sp.sales)}</td></tr>`;
+  h += '<div class="section-panel"><h2>Salesperson Performance</h2><div class="table-wrap"><table><thead><tr><th>Salesperson</th><th>Customers</th><th>Visits</th><th>Target (৳)</th><th>Achieved (৳)</th><th>% Achievement</th><th>AI Suggestion</th></tr></thead><tbody>';
+  for(const sp of s.spPerformance.slice(0,15)){
+    const pctClass = sp.pctAchievement >= 100 ? 'green' : sp.pctAchievement >= 70 ? 'amber' : 'red';
+    h += `<tr>
+      <td><strong>${esc(sp.name)}</strong></td>
+      <td>${sp.customers}</td>
+      <td>${sp.visits} / ${sp.targetVisits}</td>
+      <td>${fmt(sp.targetSales)}</td>
+      <td>${fmt(sp.achievedSales)}</td>
+      <td><span class="badge badge-${pctClass}" style="font-weight:700;">${sp.pctAchievement}%</span></td>
+      <td style="font-size:11px;max-width:280px;white-space:normal;line-height:1.4;">${esc(sp.aiSuggestion)}</td>
+    </tr>`;
   }
   h += '</tbody></table></div></div>';
 

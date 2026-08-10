@@ -221,6 +221,26 @@ function seedIfEmpty() {
     counters['ACT'] = 6;
   }
 
+  if (!readJSON('targets.json')) {
+    const targets = [
+      { salesperson: 'Nusrat Jahan', month: '2026-08', targetSales: 800000, targetVisits: 20, targetNewCustomers: 3 },
+      { salesperson: 'Sadia Rahman', month: '2026-08', targetSales: 600000, targetVisits: 18, targetNewCustomers: 2 },
+      { salesperson: 'Imran Kabir', month: '2026-08', targetSales: 550000, targetVisits: 16, targetNewCustomers: 2 },
+      { salesperson: 'Tanvir Ahmed', month: '2026-08', targetSales: 500000, targetVisits: 15, targetNewCustomers: 2 },
+      { salesperson: 'Farhana Akter', month: '2026-08', targetSales: 450000, targetVisits: 14, targetNewCustomers: 2 },
+      { salesperson: 'Shakil Ahmed', month: '2026-08', targetSales: 400000, targetVisits: 14, targetNewCustomers: 2 },
+      { salesperson: 'Ruma Begum', month: '2026-08', targetSales: 350000, targetVisits: 12, targetNewCustomers: 1 },
+      { salesperson: 'Kamrul Hasan', month: '2026-08', targetSales: 350000, targetVisits: 12, targetNewCustomers: 1 },
+      { salesperson: 'Taslima Khatun', month: '2026-08', targetSales: 300000, targetVisits: 12, targetNewCustomers: 1 },
+      { salesperson: 'Jubayer Islam', month: '2026-08', targetSales: 300000, targetVisits: 10, targetNewCustomers: 1 },
+      { salesperson: 'Sharmin Sultana', month: '2026-08', targetSales: 300000, targetVisits: 10, targetNewCustomers: 1 },
+      { salesperson: 'Abdul Mannan', month: '2026-08', targetSales: 280000, targetVisits: 10, targetNewCustomers: 1 },
+      { salesperson: 'Rima Akter', month: '2026-08', targetSales: 250000, targetVisits: 10, targetNewCustomers: 1 },
+      { salesperson: 'Zahidul Islam', month: '2026-08', targetSales: 250000, targetVisits: 8, targetNewCustomers: 1 },
+    ];
+    writeJSON('targets.json', targets);
+  }
+
   if (!readJSON('accounts.json')) {
     const accounts = {
       admin: { username: 'admin', password: hashPassword('admin123'), name: 'Super Admin', email: '' },
@@ -350,17 +370,40 @@ app.get('/api/dashboard/stats', authRequired, (req, res) => {
   const followUpDue = leads.filter(l => l.status !== 'Converted' && l.status !== 'Lost' && l.followUpDate && new Date(l.followUpDate) <= new Date(Date.now() + 3 * 86400000)).length;
 
   const salespeople = [...new Set(customers.map(c => c.salesperson))];
+  const targets = readJSON('targets.json') || [];
+  const currentMonth = new Date().toISOString().slice(0, 7);
   const spPerformance = salespeople.map(sp => {
     const spCustomers = customers.filter(c => c.salesperson === sp);
     const spVisits = visits.filter(v => spCustomers.some(c => c.id === v.customerId));
     const spOrders = orders.filter(o => spCustomers.some(c => c.id === o.customerId) && o.status === 'Delivered');
+    const achievedSales = spOrders.reduce((s, o) => s + o.totalAmount, 0);
+    const spTarget = targets.find(t => t.salesperson === sp && t.month === currentMonth);
+    const targetSales = spTarget ? spTarget.targetSales : 0;
+    const targetVisits = spTarget ? spTarget.targetVisits : 0;
+    const pctAchievement = targetSales > 0 ? Math.round((achievedSales / targetSales) * 100) : 0;
+
+    let aiSuggestion = '';
+    if (targetSales > 0) {
+      if (pctAchievement >= 110) aiSuggestion = 'Top performer — recommend territory expansion or team leadership role.';
+      else if (pctAchievement >= 90) aiSuggestion = 'On track — sustain current strategy, upsell existing customers.';
+      else if (pctAchievement >= 70) aiSuggestion = 'Close to target — prioritize high-value leads and increase follow-up frequency.';
+      else if (pctAchievement >= 50) aiSuggestion = 'Behind target — increase daily visits, re-engage dormant customers, request marketing support.';
+      else aiSuggestion = 'Critical gap — schedule coaching session, review territory assignment, consider reallocation.';
+    } else {
+      aiSuggestion = 'No target set — assign targets from Admin Panel.';
+    }
+
     return {
       name: sp,
       customers: spCustomers.length,
       visits: spVisits.length,
-      sales: spOrders.reduce((s, o) => s + o.totalAmount, 0)
+      targetVisits,
+      achievedSales,
+      targetSales,
+      pctAchievement,
+      aiSuggestion
     };
-  }).sort((a, b) => b.sales - a.sales);
+  }).sort((a, b) => b.pctAchievement - a.pctAchievement);
 
   res.json({
     customers: { total: totalCustomers, active: activeCustomers, inactive: inactiveCustomers, newThisMonth: newCustomersThisMonth },
