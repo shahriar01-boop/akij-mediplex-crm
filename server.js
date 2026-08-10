@@ -114,133 +114,8 @@ function nextId(prefix) {
 }
 
 // ── Seed data ──
-function seedIfEmpty() {
-  if (!readJSON('customers.json')) {
-    const customers = [
-      { id: 'CUS-00001', type: 'Individual', name: 'Dr. Abdur Rahman', category: 'Doctor', specialty: 'Cardiologist', phone: '01711234567', email: 'dr.rahman@email.com', address: 'House 12, Road 5, Gulshan-1', sbu: 'Pharma', region: 'Dhaka', area: 'Dhaka North', territory: 'Gulshan', salesperson: 'Nusrat Jahan', status: 'Active', createdAt: '2026-01-15', updatedAt: '2026-08-01' },
-      { id: 'CUS-00002', type: 'Individual', name: 'Dr. Fatema Begum', category: 'Doctor', specialty: 'Gynecologist', phone: '01719876543', email: 'dr.fatema@email.com', address: '23 Dhanmondi R/A, Road 8', sbu: 'Pharma', region: 'Dhaka', area: 'Dhaka South', territory: 'Dhanmondi', salesperson: 'Sadia Rahman', status: 'Active', createdAt: '2026-02-10', updatedAt: '2026-07-28' },
-      { id: 'CUS-00003', type: 'Individual', name: 'Dr. Kamal Hossain', category: 'Doctor', specialty: 'Neurologist', phone: '01715551234', email: 'dr.kamal@email.com', address: '45 Uttara Sector 7', sbu: 'Pharma', region: 'Dhaka', area: 'Dhaka North', territory: 'Uttara', salesperson: 'Imran Kabir', status: 'Active', createdAt: '2026-03-05', updatedAt: '2026-08-05' },
-      { id: 'CUS-00004', type: 'Individual', name: 'Dr. Shirin Akhter', category: 'Doctor', specialty: 'Dermatologist', phone: '01717778899', email: null, address: 'Plot 8, Block B, Bashundhara R/A', sbu: 'Pharma', region: 'Dhaka', area: 'Dhaka North', territory: 'Bashundhara', salesperson: 'Shakil Ahmed', status: 'Active', createdAt: '2026-01-20', updatedAt: '2026-08-02' },
-      { id: 'CUS-00005', type: 'Individual', name: 'Dr. Mahmudul Hasan', category: 'Doctor', specialty: 'Pediatrician', phone: '01716665544', email: null, address: '67 Mirpur Road, Mirpur-1', sbu: 'Pharma', region: 'Dhaka', area: 'Dhaka North', territory: 'Mirpur', salesperson: 'Tanvir Ahmed', status: 'Active', createdAt: '2026-04-12', updatedAt: '2026-07-30' },
-      { id: 'CUS-00006', type: 'Business', name: 'MediCare Pharmacy', category: 'Pharmacy', specialty: null, phone: '01713334455', email: 'medicare@email.com', address: '12 Banani Road 11', sbu: 'Pharma', region: 'Dhaka', area: 'Dhaka North', territory: 'Banani', salesperson: 'Farhana Akter', status: 'Active', createdAt: '2026-02-01', updatedAt: '2026-08-06' },
-      { id: 'CUS-00007', type: 'Business', name: 'HealthPlus Pharmacy', category: 'Pharmacy', specialty: null, phone: '01714445566', email: 'info@healthplus.com', address: '34 Mohammadpur Bus Stand', sbu: 'Pharma', region: 'Dhaka', area: 'Dhaka South', territory: 'Mohammadpur', salesperson: 'Mahfuzur Rahman', status: 'Active', createdAt: '2026-03-15', updatedAt: '2026-08-03' },
-      { id: 'CUS-00008', type: 'Business', name: 'Popular Diagnostic Centre', category: 'Hospital', specialty: null, phone: '01712223344', email: 'admin@populardiagnostic.com', address: '56 Motijheel C/A', sbu: 'Diagnostics', region: 'Dhaka', area: 'Dhaka South', territory: 'Motijheel', salesperson: 'Ruma Begum', status: 'Active', createdAt: '2026-01-10', updatedAt: '2026-07-25' },
-      { id: 'CUS-00009', type: 'Individual', name: 'Dr. Rezaul Karim', category: 'Doctor', specialty: 'Orthopedic', phone: '01718889900', email: null, address: '89 Farmgate, Tejgaon', sbu: 'Pharma', region: 'Dhaka', area: 'Dhaka South', territory: 'Farmgate', salesperson: 'Kamrul Hasan', status: 'Active', createdAt: '2026-05-20', updatedAt: '2026-08-04' },
-      { id: 'CUS-00010', type: 'Business', name: 'Apon Pharmacy', category: 'Pharmacy', specialty: null, phone: '01719990011', email: 'apon@email.com', address: '22 Wari, Old Dhaka', sbu: 'Pharma', region: 'Dhaka', area: 'Dhaka South', territory: 'Wari', salesperson: 'Taslima Khatun', status: 'Active', createdAt: '2026-04-01', updatedAt: '2026-08-01' },
-      { id: 'CUS-00011', type: 'Individual', name: 'Dr. Nasrin Sultana', category: 'Doctor', specialty: 'ENT', phone: '01711112233', email: 'dr.nasrin@email.com', address: '15 Khilgaon Rail Gate', sbu: 'Pharma', region: 'Dhaka', area: 'Dhaka East', territory: 'Khilgaon', salesperson: 'Jubayer Islam', status: 'Inactive', createdAt: '2026-02-28', updatedAt: '2026-07-15' },
-      { id: 'CUS-00012', type: 'Business', name: 'Wellness Drug House', category: 'Distributor', specialty: null, phone: '01716667788', email: 'sales@wellness.com', address: '100 Tejgaon I/A', sbu: 'Pharma', region: 'Dhaka', area: 'Dhaka South', territory: 'Tejgaon', salesperson: 'Abdul Mannan', status: 'Active', createdAt: '2026-03-20', updatedAt: '2026-08-07' },
-      { id: 'CUS-00013', type: 'Individual', name: 'Dr. Hasan Mahmud', category: 'Doctor', specialty: 'General Physician', phone: '01713335566', email: null, address: '78 Rampura Bazar', sbu: 'Pharma', region: 'Dhaka', area: 'Dhaka East', territory: 'Rampura', salesperson: 'Sharmin Sultana', status: 'Active', createdAt: '2026-06-01', updatedAt: '2026-08-08' },
-      { id: 'CUS-00014', type: 'Business', name: 'Savar Health Clinic', category: 'Hospital', specialty: null, phone: '01714447788', email: 'savarclinic@email.com', address: 'Savar Bazar, Savar', sbu: 'Diagnostics', region: 'Dhaka', area: 'Dhaka Outer', territory: 'Savar', salesperson: 'Rima Akter', status: 'Active', createdAt: '2026-05-10', updatedAt: '2026-08-02' },
-      { id: 'CUS-00015', type: 'Individual', name: 'Dr. Zahirul Islam', category: 'Doctor', specialty: 'Gastroenterologist', phone: '01715557788', email: null, address: '11 Narayanganj Bazar', sbu: 'Pharma', region: 'Dhaka', area: 'Dhaka Outer', territory: 'Narayanganj', salesperson: 'Zahidul Islam', status: 'Active', createdAt: '2026-04-25', updatedAt: '2026-08-05' },
-    ];
-    writeJSON('customers.json', customers);
-    counters['CUS'] = 15;
-  }
-
-  if (!readJSON('leads.json')) {
-    const leads = [
-      { id: 'LEAD-00001', customerId: null, name: 'Dr. Anisur Rahman', source: 'Referral', product: 'Cardiology Range', status: 'New', assignedTo: 'Nusrat Jahan', notes: 'Referred by Dr. Abdur Rahman', lostReason: null, followUpDate: '2026-08-15', createdAt: '2026-08-01', updatedAt: '2026-08-01' },
-      { id: 'LEAD-00002', customerId: null, name: 'Ibn Sina Hospital', source: 'Website', product: 'Full Diagnostic Line', status: 'Qualified', assignedTo: 'Imran Kabir', notes: 'Submitted inquiry via website', lostReason: null, followUpDate: '2026-08-12', createdAt: '2026-07-25', updatedAt: '2026-08-05' },
-      { id: 'LEAD-00003', customerId: null, name: 'Dr. Selina Akhter', source: 'Walk-in', product: 'Gynecology Range', status: 'New', assignedTo: 'Sadia Rahman', notes: 'Visited office, requested samples', lostReason: null, followUpDate: '2026-08-14', createdAt: '2026-08-08', updatedAt: '2026-08-08' },
-      { id: 'LEAD-00004', customerId: null, name: 'New Life Pharmacy', source: 'Cold Call', product: 'OTC Products', status: 'Lost', assignedTo: 'Farhana Akter', notes: 'Not interested at this time', lostReason: 'Competitor contract', followUpDate: '2026-09-01', createdAt: '2026-07-15', updatedAt: '2026-08-01' },
-      { id: 'LEAD-00005', customerId: 'CUS-00001', name: 'Dr. Abdur Rahman (Expansion)', source: 'Existing Customer', product: 'Neurology Range', status: 'Converted', assignedTo: 'Nusrat Jahan', notes: 'Customer expanding product usage', lostReason: null, followUpDate: null, createdAt: '2026-06-20', updatedAt: '2026-08-09' },
-    ];
-    writeJSON('leads.json', leads);
-    counters['LEAD'] = 5;
-  }
-
-  if (!readJSON('opportunities.json')) {
-    const opportunities = [
-      { id: 'OPP-00001', customerId: 'CUS-00001', name: 'Cardiology Supply Contract', product: 'Cardiology Range', expectedValue: 500000, probability: 70, stage: 'Proposal', closingDate: '2026-09-30', notes: 'Annual supply contract negotiation', createdAt: '2026-06-01', updatedAt: '2026-08-01' },
-      { id: 'OPP-00002', customerId: 'CUS-00006', name: 'OTC Bulk Order', product: 'OTC Range', expectedValue: 300000, probability: 50, stage: 'Qualification', closingDate: '2026-08-30', notes: 'Pharmacy chain bulk purchase', createdAt: '2026-07-10', updatedAt: '2026-08-05' },
-      { id: 'OPP-00003', customerId: 'CUS-00008', name: 'Diagnostic Equipment', product: 'Diagnostic Kits', expectedValue: 1200000, probability: 30, stage: 'Prospecting', closingDate: '2026-12-15', notes: 'New equipment procurement', createdAt: '2026-08-01', updatedAt: '2026-08-01' },
-      { id: 'OPP-00004', customerId: 'CUS-00002', name: 'Gynecology Annual', product: 'Gynecology Range', expectedValue: 450000, probability: 85, stage: 'Negotiation', closingDate: '2026-09-15', notes: 'Final pricing discussion', createdAt: '2026-05-15', updatedAt: '2026-08-09' },
-      { id: 'OPP-00005', customerId: 'CUS-00012', name: 'Distributor Expansion', product: 'Full Pharma Range', expectedValue: 800000, probability: 60, stage: 'Proposal', closingDate: '2026-10-01', notes: 'New territory distribution rights', createdAt: '2026-07-01', updatedAt: '2026-08-08' },
-      { id: 'OPP-00006', customerId: 'CUS-00003', name: 'Neurology Trial', product: 'Neurology Range', expectedValue: 200000, probability: 90, stage: 'Closed-Won', closingDate: '2026-08-10', notes: 'Trial completed, order confirmed', createdAt: '2026-06-10', updatedAt: '2026-08-10' },
-    ];
-    writeJSON('opportunities.json', opportunities);
-    counters['OPP'] = 6;
-  }
-
-  if (!readJSON('visits.json')) {
-    const visits = [
-      { id: 'VIS-00001', customerId: 'CUS-00001', type: 'Customer Visit', purpose: 'Product detailing - Cardiology', salesperson: 'Nusrat Jahan', checkIn: '2026-08-10T09:00:00', checkOut: '2026-08-10T09:45:00', location: { lat: 23.7925, lng: 90.4078 }, findings: 'Doctor showed interest in new cardiology range. Requested samples and pricing.', nextAction: 'Send samples and price list by Aug 12', photoUrl: null, createdAt: '2026-08-10T09:00:00' },
-      { id: 'VIS-00002', customerId: 'CUS-00002', type: 'Customer Visit', purpose: 'Follow-up on prescription trends', salesperson: 'Sadia Rahman', checkIn: '2026-08-10T10:30:00', checkOut: '2026-08-10T11:00:00', location: { lat: 23.7450, lng: 90.3830 }, findings: 'Prescription volume increased 15% this month.', nextAction: 'Continue monthly follow-up', photoUrl: null, createdAt: '2026-08-10T10:30:00' },
-      { id: 'VIS-00003', customerId: 'CUS-00006', type: 'Market Visit', purpose: 'Stock check and reorder', salesperson: 'Farhana Akter', checkIn: '2026-08-09T14:00:00', checkOut: '2026-08-09T14:30:00', location: { lat: 23.7944, lng: 90.4044 }, findings: 'Low stock on 3 SKUs. Pharmacy requested urgent restock.', nextAction: 'Process order immediately', photoUrl: null, createdAt: '2026-08-09T14:00:00' },
-      { id: 'VIS-00004', customerId: 'CUS-00003', type: 'Planned Visit', purpose: 'New product launch presentation', salesperson: 'Imran Kabir', checkIn: '2026-08-09T11:00:00', checkOut: '2026-08-09T12:00:00', location: { lat: 23.8735, lng: 90.3938 }, findings: 'Doctor agreed to try new neurology product on 5 patients.', nextAction: 'Deliver trial packs on Aug 12', photoUrl: null, createdAt: '2026-08-09T11:00:00' },
-      { id: 'VIS-00005', customerId: 'CUS-00001', type: 'Customer Visit', purpose: 'Sample delivery', salesperson: 'Nusrat Jahan', checkIn: '2026-08-08T16:00:00', checkOut: '2026-08-08T16:20:00', location: { lat: 23.7925, lng: 90.4078 }, findings: 'Samples delivered. Doctor will prescribe and provide feedback.', nextAction: 'Follow up in 2 weeks', photoUrl: null, createdAt: '2026-08-08T16:00:00' },
-    ];
-    writeJSON('visits.json', visits);
-    counters['VIS'] = 5;
-  }
-
-  if (!readJSON('orders.json')) {
-    const orders = [
-      { id: 'ORD-00001', customerId: 'CUS-00006', items: [{ product: 'Paracetamol 500mg', quantity: 500, unitPrice: 150 }, { product: 'Omeprazole 20mg', quantity: 300, unitPrice: 200 }], totalAmount: 135000, status: 'Approved', approvedBy: 'Sales Head', dispatchedAt: null, deliveredAt: null, createdAt: '2026-08-09', updatedAt: '2026-08-10' },
-      { id: 'ORD-00002', customerId: 'CUS-00007', items: [{ product: 'Amoxicillin 500mg', quantity: 200, unitPrice: 180 }, { product: 'Ciprofloxacin 500mg', quantity: 150, unitPrice: 250 }], totalAmount: 73500, status: 'Pending', approvedBy: null, dispatchedAt: null, deliveredAt: null, createdAt: '2026-08-10', updatedAt: '2026-08-10' },
-      { id: 'ORD-00003', customerId: 'CUS-00008', items: [{ product: 'Diagnostic Kit A', quantity: 10, unitPrice: 8500 }], totalAmount: 85000, status: 'Dispatched', approvedBy: 'Sales Head', dispatchedAt: '2026-08-10', deliveredAt: null, createdAt: '2026-08-08', updatedAt: '2026-08-10' },
-      { id: 'ORD-00004', customerId: 'CUS-00012', items: [{ product: 'Pharma Bundle A', quantity: 50, unitPrice: 2000 }], totalAmount: 100000, status: 'Delivered', approvedBy: 'Sales Head', dispatchedAt: '2026-08-05', deliveredAt: '2026-08-08', createdAt: '2026-08-03', updatedAt: '2026-08-09' },
-      { id: 'ORD-00005', customerId: 'CUS-00010', items: [{ product: 'Cough Syrup', quantity: 100, unitPrice: 85 }, { product: 'Antihistamine', quantity: 80, unitPrice: 95 }], totalAmount: 16100, status: 'Pending', approvedBy: null, dispatchedAt: null, deliveredAt: null, createdAt: '2026-08-10', updatedAt: '2026-08-10' },
-    ];
-    writeJSON('orders.json', orders);
-    counters['ORD'] = 5;
-  }
-
-  if (!readJSON('complaints.json')) {
-    const complaints = [
-      { id: 'CMP-00001', customerId: 'CUS-00010', category: 'Product Quality', description: 'Cough syrup bottles arrived with damaged seals', priority: 'High', status: 'Open', assignedTo: 'Quality Team', sla: '2026-08-13', resolution: null, resolvedAt: null, customerConfirmed: false, csat: null, createdAt: '2026-08-10' },
-      { id: 'CMP-00002', customerId: 'CUS-00006', category: 'Delivery', description: 'Last order was 2 days late', priority: 'Medium', status: 'In Progress', assignedTo: 'Logistics', sla: '2026-08-15', resolution: null, resolvedAt: null, customerConfirmed: false, csat: null, createdAt: '2026-08-08' },
-      { id: 'CMP-00003', customerId: 'CUS-00002', category: 'Billing', description: 'Invoice amount mismatch - charged extra 500 BDT', priority: 'Medium', status: 'Resolved', assignedTo: 'Accounts', sla: '2026-08-10', resolution: 'Credit note issued for 500 BDT', resolvedAt: '2026-08-09', customerConfirmed: true, csat: 4, createdAt: '2026-08-07' },
-      { id: 'CMP-00004', customerId: 'CUS-00001', category: 'Product Quality', description: 'Tablet coating inconsistent in latest batch', priority: 'Low', status: 'Open', assignedTo: null, sla: '2026-08-20', resolution: null, resolvedAt: null, customerConfirmed: false, csat: null, createdAt: '2026-08-09' },
-    ];
-    writeJSON('complaints.json', complaints);
-    counters['CMP'] = 4;
-  }
-
-  if (!readJSON('contacts.json')) {
-    const contacts = [
-      { id: 'CONT-00001', customerId: 'CUS-00001', name: 'Dr. Abdur Rahman', designation: 'Chief Cardiologist', phone: '01711234567', email: 'dr.rahman@email.com', isPrimary: true },
-      { id: 'CONT-00002', customerId: 'CUS-00006', name: 'Mr. Karim', designation: 'Owner', phone: '01713334455', email: 'karim@email.com', isPrimary: true },
-      { id: 'CONT-00003', customerId: 'CUS-00008', name: 'Ms. Anika', designation: 'Admin Manager', phone: '01712223345', email: 'anika@populardiagnostic.com', isPrimary: true },
-      { id: 'CONT-00004', customerId: 'CUS-00012', name: 'Mr. Habibur', designation: 'Operations Head', phone: '01716667789', email: 'habibur@wellness.com', isPrimary: true },
-    ];
-    writeJSON('contacts.json', contacts);
-    counters['CONT'] = 4;
-  }
-
-  if (!readJSON('activities.json')) {
-    const activities = [
-      { id: 'ACT-00001', customerId: 'CUS-00001', type: 'visit', description: 'Product detailing - Cardiology', performedBy: 'Nusrat Jahan', createdAt: '2026-08-10T09:00:00' },
-      { id: 'ACT-00002', customerId: 'CUS-00001', type: 'order', description: 'Order ORD-00004 delivered', performedBy: 'Logistics', createdAt: '2026-08-08T10:00:00' },
-      { id: 'ACT-00003', customerId: 'CUS-00001', type: 'complaint', description: 'Complaint CMP-00004 filed', performedBy: 'System', createdAt: '2026-08-09T14:00:00' },
-      { id: 'ACT-00004', customerId: 'CUS-00006', type: 'visit', description: 'Stock check and reorder', performedBy: 'Farhana Akter', createdAt: '2026-08-09T14:00:00' },
-      { id: 'ACT-00005', customerId: 'CUS-00006', type: 'order', description: 'Order ORD-00001 placed', performedBy: 'Farhana Akter', createdAt: '2026-08-09T14:30:00' },
-      { id: 'ACT-00006', customerId: 'CUS-00002', type: 'complaint', description: 'Complaint CMP-00003 resolved', performedBy: 'Accounts', createdAt: '2026-08-09T16:00:00' },
-    ];
-    writeJSON('activities.json', activities);
-    counters['ACT'] = 6;
-  }
-
-  if (!readJSON('targets.json')) {
-    const targets = [
-      { salesperson: 'Nusrat Jahan', month: '2026-08', targetSales: 800000, targetVisits: 20, targetNewCustomers: 3 },
-      { salesperson: 'Sadia Rahman', month: '2026-08', targetSales: 600000, targetVisits: 18, targetNewCustomers: 2 },
-      { salesperson: 'Imran Kabir', month: '2026-08', targetSales: 550000, targetVisits: 16, targetNewCustomers: 2 },
-      { salesperson: 'Tanvir Ahmed', month: '2026-08', targetSales: 500000, targetVisits: 15, targetNewCustomers: 2 },
-      { salesperson: 'Farhana Akter', month: '2026-08', targetSales: 450000, targetVisits: 14, targetNewCustomers: 2 },
-      { salesperson: 'Shakil Ahmed', month: '2026-08', targetSales: 400000, targetVisits: 14, targetNewCustomers: 2 },
-      { salesperson: 'Ruma Begum', month: '2026-08', targetSales: 350000, targetVisits: 12, targetNewCustomers: 1 },
-      { salesperson: 'Kamrul Hasan', month: '2026-08', targetSales: 350000, targetVisits: 12, targetNewCustomers: 1 },
-      { salesperson: 'Taslima Khatun', month: '2026-08', targetSales: 300000, targetVisits: 12, targetNewCustomers: 1 },
-      { salesperson: 'Jubayer Islam', month: '2026-08', targetSales: 300000, targetVisits: 10, targetNewCustomers: 1 },
-      { salesperson: 'Sharmin Sultana', month: '2026-08', targetSales: 300000, targetVisits: 10, targetNewCustomers: 1 },
-      { salesperson: 'Abdul Mannan', month: '2026-08', targetSales: 280000, targetVisits: 10, targetNewCustomers: 1 },
-      { salesperson: 'Rima Akter', month: '2026-08', targetSales: 250000, targetVisits: 10, targetNewCustomers: 1 },
-      { salesperson: 'Zahidul Islam', month: '2026-08', targetSales: 250000, targetVisits: 8, targetNewCustomers: 1 },
-    ];
-    writeJSON('targets.json', targets);
-  }
-
+// ── Seed accounts only (no demo data) ──
+function initAccounts() {
   if (!readJSON('accounts.json')) {
     const accounts = {
       admin: { username: 'admin', password: hashPassword('admin123'), name: 'Super Admin', email: '' },
@@ -262,7 +137,13 @@ function seedIfEmpty() {
     writeJSON('accounts.json', accounts);
   }
 }
-seedIfEmpty();
+initAccounts();
+
+// Wipe all data files except accounts on startup
+const DATA_FILES = ['customers','leads','opportunities','visits','orders','complaints','contacts','activities','targets'];
+for (const name of DATA_FILES) {
+  writeJSON(`${name}.json`, []);
+}
 
 // ── Role hierarchy ──
 const ROLE_HIERARCHY = {
