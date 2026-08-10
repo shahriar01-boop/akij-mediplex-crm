@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AKIJ CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#2E3192;--navy-900:#22265E;--navy-700:#3B3FAE;--navy-100:#ECEDF9;--navy-50:#F5F5FC;
+  --cyan:#1FBDC6;--cyan-700:#149AA2;--cyan-100:#E1F8F9;
+  --ink:#171B2E;--muted:#666E8C;--paper:#FFFFFF;--line:#E1E2F0;
+  --red:#C24A3E;--red-100:#F8E5E2;--green:#2E8A5E;--green-100:#E3F3EA;
+  --amber:#B9791E;--amber-100:#FBEEDA;--purple:#6B4FA8;--purple-100:#EFEAF9;
+  --shadow:0 1px 2px rgba(46,49,146,0.06),0 8px 26px rgba(46,49,146,0.09);
+  --radius:14px;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--navy-50);color:var(--ink);font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased;}
+h1,h2,h3{font-family:'Fraunces',serif;font-weight:600;letter-spacing:-0.01em;}
+a{color:inherit;}
+button{font-family:inherit;cursor:pointer;}
+input,select,textarea{font-family:inherit;font-size:13.5px;padding:9px 12px;border:1.5px solid var(--line);border-radius:8px;background:var(--paper);color:var(--ink);outline:none;transition:border-color .15s;}
+input:focus,select:focus,textarea:focus{border-color:var(--navy);box-shadow:0 0 0 3px var(--navy-100);}
+.req{color:var(--red);margin-left:2px;}
+
+/* Login */
+.login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(160deg,var(--navy-900),var(--navy) 50%);padding:24px;}
+.login-card{background:var(--paper);border-radius:18px;padding:48px 40px 40px;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,0.25);}
+.login-card h1{font-size:28px;margin:0 0 4px;color:var(--navy);}
+.login-card .sub{color:var(--muted);font-size:14px;margin-bottom:32px;}
+.login-card .field{margin-bottom:18px;}
+.login-card .field label{display:block;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em;}
+.login-card .field input{width:100%;}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 20px;border-radius:9px;font-size:14px;font-weight:600;border:none;transition:all .15s;}
+.btn-primary{background:var(--navy);color:#fff;}
+.btn-primary:hover{background:var(--navy-700);}
+.btn-danger{background:var(--red);color:#fff;}
+.btn-danger:hover{opacity:.9;}
+.btn-outline{background:transparent;border:1.5px solid var(--line);color:var(--ink);}
+.btn-outline:hover{background:var(--navy-50);border-color:var(--navy-100);}
+.btn-sm{padding:6px 14px;font-size:12.5px;border-radius:7px;}
+.btn-block{width:100%;}
+.btn-cyan{background:var(--cyan);color:#fff;}
+.btn-cyan:hover{background:var(--cyan-700);}
+.login-error{color:var(--red);font-size:13px;margin-top:8px;display:none;}
+
+/* App Shell */
+.app{display:flex;min-height:100vh;}
+.sidebar{width:220px;flex-shrink:0;background:linear-gradient(190deg,var(--navy-900),var(--navy) 65%);color:#ECEDFB;padding:20px 14px;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;border-right:3px solid var(--cyan);overflow-y:auto;}
+.brand{display:flex;align-items:center;gap:10px;padding:2px 6px 16px 6px;border-bottom:1px solid rgba(236,237,251,0.16);margin-bottom:14px;}
+.brand-mark{width:36px;height:36px;border-radius:8px;background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;font-size:18px;color:var(--navy);}
+.brand-name{font-family:'Fraunces',serif;font-size:15px;line-height:1.2;font-weight:600;}
+.brand-sub{font-size:10px;color:var(--cyan);letter-spacing:.06em;text-transform:uppercase;margin-top:2px;font-weight:600;}
+.who{background:rgba(255,255,255,0.08);border:1px solid rgba(236,237,251,0.16);border-radius:10px;padding:10px 12px;margin-bottom:12px;}
+.who .name{font-size:12.5px;font-weight:700;}
+.who .role{font-size:10.5px;color:var(--cyan);text-transform:uppercase;letter-spacing:.05em;margin-top:1px;}
+.who button{margin-top:8px;width:100%;}
+nav{display:flex;flex-direction:column;gap:1px;flex:1;}
+.nav-group-label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#9AA1D9;padding:14px 10px 4px;font-weight:600;}
+.nav-item{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-radius:8px;font-size:13px;font-weight:500;color:#CCD0F2;cursor:pointer;border:1px solid transparent;user-select:none;transition:all .15s;}
+.nav-item:hover{background:rgba(236,237,251,0.09);}
+.nav-item.active{background:rgba(31,189,198,0.22);color:#fff;border-color:rgba(31,189,198,0.35);}
+.nav-badge{font-size:10.5px;background:var(--cyan);color:#fff;padding:2px 8px;border-radius:10px;font-weight:600;}
+.sidebar-foot{font-size:10.5px;color:#9AA1D9;padding:10px 8px 0 8px;}
+
+/* Main */
+.main{flex:1;min-width:0;padding:28px 36px 60px;overflow-y:auto;max-height:100vh;}
+.main-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;}
+.main-header h1{font-size:26px;margin:0;}
+.main-header-actions{display:flex;gap:8px;}
+
+/* Cards */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-bottom:24px;}
+.stat-card{background:var(--paper);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow);border-left:3px solid var(--navy);}
+.stat-card.cyan{border-left-color:var(--cyan);}
+.stat-card.green{border-left-color:var(--green);}
+.stat-card.amber{border-left-color:var(--amber);}
+.stat-card.red{border-left-color:var(--red);}
+.stat-card .label{font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600;margin-bottom:6px;}
+.stat-card .value{font-family:'Fraunces',serif;font-size:28px;font-weight:700;color:var(--ink);line-height:1;}
+.stat-card .sub{font-size:12px;color:var(--muted);margin-top:4px;}
+
+/* Section panels */
+.section-panel{background:var(--paper);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px 24px;margin-bottom:20px;}
+.section-panel h2{font-size:18px;margin:0 0 16px;display:flex;align-items:center;justify-content:space-between;}
+.section-panel h2 .count{font-size:13px;font-weight:500;color:var(--muted);font-family:'IBM Plex Mono',monospace;}
+
+/* Table */
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{text-align:left;padding:10px 12px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600;border-bottom:2px solid var(--line);white-space:nowrap;}
+td{padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap;}
+tr:hover td{background:var(--navy-50);}
+tr.clickable{cursor:pointer;}
+tr.clickable:hover td{background:var(--cyan-100);}
+.actions-cell{display:flex;gap:4px;}
+
+/* Badges */
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;letter-spacing:.01em;}
+.badge-active{background:var(--green-100);color:var(--green);}
+.badge-inactive{background:var(--red-100);color:var(--red);}
+.badge-new{background:#DBEAFE;color:#1E40AF;}
+.badge-qualified{background:var(--cyan-100);color:var(--cyan-700);}
+.badge-converted{background:var(--green-100);color:var(--green);}
+.badge-lost{background:var(--red-100);color:var(--red);}
+.badge-pending{background:var(--amber-100);color:var(--amber);}
+.badge-approved{background:#DBEAFE;color:#1E40AF;}
+.badge-dispatched{background:var(--purple-100);color:var(--purple);}
+.badge-delivered{background:var(--green-100);color:var(--green);}
+.badge-open{background:var(--red-100);color:var(--red);}
+.badge-inprogress{background:var(--amber-100);color:var(--amber);}
+.badge-resolved{background:var(--green-100);color:var(--green);}
+.badge-high{background:var(--red-100);color:var(--red);}
+.badge-medium{background:var(--amber-100);color:var(--amber);}
+.badge-low{background:var(--navy-100);color:var(--navy);}
+.badge-critical{background:var(--red-100);color:var(--red);font-weight:700;}
+
+/* Search bar */
+.search-bar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+.search-bar input{flex:1;min-width:200px;}
+.search-bar select{min-width:140px;}
+
+/* Modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(23,27,46,0.5);z-index:100;align-items:center;justify-content:center;padding:24px;}
+.modal-overlay.show{display:flex;}
+.modal{background:var(--paper);border-radius:var(--radius);width:100%;max-width:600px;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.25);}
+.modal.large{max-width:900px;}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--line);}
+.modal-header h2{margin:0;font-size:18px;}
+.modal-body{padding:20px 24px;}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;padding:16px 24px;border-top:1px solid var(--line);}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+.field-row.full{grid-template-columns:1fr;}
+.field-row.col3{grid-template-columns:1fr 1fr 1fr;}
+.field-group{margin-bottom:14px;}
+.field-group label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.03em;}
+.field-group input,.field-group select,.field-group textarea{width:100%;}
+.field-group textarea{min-height:80px;resize:vertical;}
+
+/* Customer 360 */
+.c360-grid{display:grid;grid-template-columns:1fr 2fr;gap:20px;}
+.c360-sidebar{background:var(--navy-50);border-radius:var(--radius);padding:20px;border:1px solid var(--line);}
+.c360-sidebar h3{font-size:20px;margin:0 0 4px;}
+.c360-sidebar .meta{font-size:13px;color:var(--muted);margin-bottom:4px;}
+.c360-sidebar .detail{font-size:12.5px;margin-bottom:2px;display:flex;gap:6px;}
+.c360-sidebar .detail .lbl{color:var(--muted);min-width:80px;font-weight:500;}
+.c360-main{display:flex;flex-direction:column;gap:16px;}
+.c360-tabs{display:flex;gap:2px;flex-wrap:wrap;}
+.c360-tab{padding:8px 16px;font-size:12.5px;font-weight:600;border:none;border-radius:8px 8px 0 0;background:var(--navy-50);color:var(--muted);cursor:pointer;transition:all .15s;border:1px solid transparent;}
+.c360-tab:hover{background:var(--navy-100);}
+.c360-tab.active{background:var(--paper);color:var(--navy);border:1px solid var(--line);border-bottom-color:var(--paper);}
+
+/* Responsive */
+@media(max-width:768px){
+  .app{flex-direction:column;}
+  .sidebar{width:100%;height:auto;position:relative;padding:14px;}
+  .main{padding:20px;}
+  .stats-grid{grid-template-columns:repeat(2,1fr);}
+  .c360-grid{grid-template-columns:1fr;}
+  .field-row{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- Login Screen -->
+<div id="login-screen" class="login-screen">
+  <div class="login-card">
+    <h1>AKIJ CRM</h1>
+    <div class="sub">Sign in to your account</div>
+    <div class="field"><label>Username</label><input type="text" id="login-username" placeholder="Enter username"></div>
+    <div class="field"><label>Password</label><input type="password" id="login-password" placeholder="Enter password"></div>
+    <div id="login-error" class="login-error"></div>
+    <button class="btn btn-primary btn-block" onclick="doLogin()" style="margin-top:8px">Sign In</button>
+    <div style="margin-top:20px;font-size:11.5px;color:var(--muted);text-align:center">
+      Demo: admin / admin123<br>
+      SO: nusrat.jahan / nusrat123<br>
+      Sales Head: sales.head / sales123
+    </div>
+  </div>
+</div>
+
+<!-- Main App -->
+<div id="app-screen" style="display:none">
+  <div class="app">
+    <aside class="sidebar" id="sidebar"></aside>
+    <main class="main">
+      <div class="main-header">
+        <h1 id="page-title">Dashboard</h1>
+        <div class="main-header-actions" id="header-actions"></div>
+      </div>
+      <div id="page-content"></div>
+    </main>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal" id="modal"></div>
+</div>
+
+<script>
+// ── State ──
+let state = { user: null, token: null, currentTab: 'dashboard', customers: [], leads: [], opportunities: [], visits: [], orders: [], complaints: [], contacts: [], activities: [], accounts: [], stats: null };
+
+// ── Auth ──
+async function doLogin(){
+  const u = document.getElementById('login-username').value.trim();
+  const p = document.getElementById('login-password').value;
+  const err = document.getElementById('login-error');
+  err.style.display = 'none';
+  if(!u || !p){ err.textContent='Username and password required'; err.style.display='block'; return; }
+  try{
+    const r = await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})});
+    const d = await r.json();
+    if(!r.ok){ err.textContent=d.error; err.style.display='block'; return; }
+    state.token = d.token;
+    state.user = d.user;
+    localStorage.setItem('crm_token',d.token);
+    localStorage.setItem('crm_user',JSON.stringify(d.user));
+    await initApp();
+  }catch(e){ err.textContent='Connection error'; err.style.display='block'; }
+}
+
+async function checkSession(){
+  const t = localStorage.getItem('crm_token');
+  if(!t) return false;
+  state.token = t;
+  try{
+    const r = await fetch('/api/session',{headers:{'Authorization':'Bearer '+t}});
+    if(!r.ok) return false;
+    const d = await r.json();
+    state.user = d.user;
+    return true;
+  }catch(e){ return false; }
+}
+
+function logout(){
+  fetch('/api/logout',{method:'POST',headers:{'Authorization':'Bearer '+state.token}});
+  localStorage.removeItem('crm_token');
+  localStorage.removeItem('crm_user');
+  state = { user: null, token: null, currentTab: 'dashboard', customers: [], leads: [], opportunities: [], visits: [], orders: [], complaints: [], contacts: [], activities: [], accounts: [], stats: null };
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app-screen').style.display = 'none';
+}
+
+// ── API helpers ──
+async function api(method, path, body){
+  const opts = { method, headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer '+state.token } };
+  if(body) opts.body = JSON.stringify(body);
+  const r = await fetch(path, opts);
+  const d = await r.json();
+  if(!r.ok) throw new Error(d.error||'API error');
+  return d;
+}
+
+const apiGet = p => api('GET',p);
+const apiPost = (p,b) => api('POST',p,b);
+const apiPut = (p,b) => api('PUT',p,b);
+const apiDel = p => api('DELETE',p);
+
+// ── Navigation ──
+const NAV_GROUPS = [
+  { label: 'MAIN', items: [{id:'dashboard',label:'Dashboard'}] },
+  { label: 'CUSTOMERS', items: [{id:'customers',label:'Customers'}] },
+  { label: 'SALES', items: [{id:'leads',label:'Leads'},{id:'opportunities',label:'Opportunities'},{id:'visits',label:'Visits'},{id:'orders',label:'Orders'}] },
+  { label: 'SERVICE', items: [{id:'complaints',label:'Complaints'},{id:'contact-center',label:'Contact Center'}] },
+  { label: 'OPERATIONS', items: [{id:'sales-excellence',label:'Sales Excellence'}] },
+  { label: 'INSIGHTS', items: [{id:'reports',label:'Reports'}] },
+];
+
+function buildSidebar(){
+  const s = document.getElementById('sidebar');
+  let h = `<div class="brand"><div class="brand-mark">A</div><div><div class="brand-name">AKIJ CRM</div><div class="brand-sub">Customer 360</div></div></div>`;
+  h += `<div class="who"><div class="name">${esc(state.user.name)}</div><div class="role">${state.user.role.toUpperCase()}</div><button class="btn btn-sm" style="background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.2);font-size:11px;margin-top:6px;width:100%;" onclick="logout()">Sign Out</button></div>`;
+  h += '<nav>';
+  for(const g of NAV_GROUPS){
+    h += `<div class="nav-group-label">${g.label}</div>`;
+    for(const item of g.items){
+      h += `<div class="nav-item${state.currentTab===item.id?' active':''}" onclick="navigate('${item.id}')">${item.label}</div>`;
+    }
+  }
+  h += '</nav><div class="sidebar-foot">&copy; AKIJ Group 2026</div>';
+  s.innerHTML = h;
+}
+
+function navigate(tab){
+  state.currentTab = tab;
+  buildSidebar();
+  renderPage();
+}
+
+// ── Page rendering ──
+async function renderPage(){
+  const title = document.getElementById('page-title');
+  const content = document.getElementById('page-content');
+  const actions = document.getElementById('header-actions');
+  actions.innerHTML = '';
+
+  switch(state.currentTab){
+    case 'dashboard': title.textContent='Dashboard'; await renderDashboard(content); break;
+    case 'customers': title.textContent='Customers'; renderCustomerList(content); actions.innerHTML='<button class="btn btn-primary btn-sm" onclick="showCustomerForm()">+ Add Customer</button>'; break;
+    case 'leads': title.textContent='Leads'; renderLeadList(content); actions.innerHTML='<button class="btn btn-primary btn-sm" onclick="showLeadForm()">+ Add Lead</button>'; break;
+    case 'opportunities': title.textContent='Opportunities'; renderOpportunityList(content); actions.innerHTML='<button class="btn btn-primary btn-sm" onclick="showOppForm()">+ Add Opportunity</button>'; break;
+    case 'visits': title.textContent='Visits'; renderVisitList(content); actions.innerHTML='<button class="btn btn-primary btn-sm" onclick="showVisitForm()">+ Log Visit</button>'; break;
+    case 'orders': title.textContent='Orders'; renderOrderList(content); actions.innerHTML='<button class="btn btn-primary btn-sm" onclick="showOrderForm()">+ New Order</button>'; break;
+    case 'complaints': title.textContent='Complaints'; renderComplaintList(content); actions.innerHTML='<button class="btn btn-primary btn-sm" onclick="showComplaintForm()">+ Register Complaint</button>'; break;
+    case 'contact-center': title.textContent='Contact Center'; renderContactCenter(content); break;
+    case 'sales-excellence': title.textContent='Sales Excellence'; renderSalesExcellence(content); break;
+    case 'reports': title.textContent='Reports'; renderReports(content); break;
+    case 'customer-360': break;
+  }
+}
+
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ── Dashboard ──
+async function renderDashboard(el){
+  try{ state.stats = await apiGet('/api/dashboard/stats'); }catch(e){ state.stats = null; }
+  const s = state.stats;
+  if(!s){ el.innerHTML='<div class="section-panel"><p>Loading stats...</p></div>'; return; }
+  const fmt = n => n ? n.toLocaleString() : '0';
+  let h = '<div class="stats-grid">';
+  h += `<div class="stat-card"><div class="label">Total Customers</div><div class="value">${s.customers.total}</div><div class="sub">${s.customers.active} active · ${s.customers.inactive} inactive</div></div>`;
+  h += `<div class="stat-card cyan"><div class="label">New This Month</div><div class="value">${s.customers.newThisMonth}</div><div class="sub">Customer acquisitions</div></div>`;
+  h += `<div class="stat-card"><div class="label">Open Leads</div><div class="value">${s.leads.open}</div><div class="sub">${s.leads.converted} converted · ${s.leads.followUpDue} follow-up due</div></div>`;
+  h += `<div class="stat-card green"><div class="label">Pipeline Value</div><div class="value">${fmt(Math.round(s.opportunities.pipelineValue))}</div><div class="sub">${s.opportunities.open} open opportunities</div></div>`;
+  h += `<div class="stat-card amber"><div class="label">Pending Orders</div><div class="value">${s.orders.pending}</div><div class="sub">${fmt(s.orders.outstanding)} outstanding</div></div>`;
+  h += `<div class="stat-card green"><div class="label">Total Sales</div><div class="value">${fmt(s.orders.totalSales)}</div><div class="sub">${s.orders.total} total orders</div></div>`;
+  h += `<div class="stat-card red"><div class="label">Open Complaints</div><div class="value">${s.complaints.open}</div><div class="sub">${s.complaints.total} total · CSAT ${s.complaints.avgCsat}/5</div></div>`;
+  h += `<div class="stat-card cyan"><div class="label">Visits This Month</div><div class="value">${s.visits.thisMonth}</div><div class="sub">${s.visits.total} total visits</div></div>`;
+  h += '</div>';
+
+  h += '<div class="section-panel"><h2>Salesperson Performance <span class="count">Top performers</span></h2><div class="table-wrap"><table><thead><tr><th>Salesperson</th><th>Customers</th><th>Visits</th><th>Sales (BDT)</th></tr></thead><tbody>';
+  for(const sp of s.spPerformance.slice(0,10)){
+    h += `<tr><td><strong>${esc(sp.name)}</strong></td><td>${sp.customers}</td><td>${sp.visits}</td><td>${fmt(sp.sales)}</td></tr>`;
+  }
+  h += '</tbody></table></div></div>';
+
+  // Recent activities
+  try{ state.activities = await apiGet('/api/activities'); }catch(e){}
+  if(state.activities.length){
+    h += '<div class="section-panel"><h2>Recent Activity</h2><div class="table-wrap"><table><thead><tr><th>Time</th><th>Type</th><th>Description</th><th>By</th></tr></thead><tbody>';
+    for(const a of state.activities.slice(0,10)){
+      const dt = new Date(a.createdAt).toLocaleDateString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+      h += `<tr><td>${dt}</td><td><span class="badge badge-active">${esc(a.type)}</span></td><td>${esc(a.description)}</td><td>${esc(a.performedBy)}</td></tr>`;
+    }
+    h += '</tbody></table></div></div>';
+  }
+  el.innerHTML = h;
+}
+
+// ── Customer List ──
+async function renderCustomerList(el){
+  try{ state.customers = await apiGet('/api/customers'); }catch(e){}
+  const cs = state.customers;
+  let h = '<div class="search-bar"><input type="text" id="cust-search" placeholder="Search customers..." oninput="renderCustomerList(document.getElementById(\'page-content\'))"><select id="cust-filter-status" onchange="renderCustomerList(document.getElementById(\'page-content\'))"><option value="">All Status</option><option value="Active">Active</option><option value="Inactive">Inactive</option></select><select id="cust-filter-territory" onchange="renderCustomerList(document.getElementById(\'page-content\'))"><option value="">All Territories</option></select></div>';
+  h += '<div class="section-panel"><div class="table-wrap"><table><thead><tr><th>ID</th><th>Name</th><th>Type</th><th>Category</th><th>Territory</th><th>Salesperson</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
+
+  const search = document.getElementById('cust-search')?.value?.toLowerCase()||'';
+  const fStatus = document.getElementById('cust-filter-status')?.value||'';
+  const fTerr = document.getElementById('cust-filter-territory')?.value||'';
+
+  // Populate territory filter
+  const territories = [...new Set(cs.map(c=>c.territory))].sort();
+  const terrSel = document.getElementById('cust-filter-territory');
+  if(terrSel && terrSel.options.length <= 1){
+    for(const t of territories) terrSel.innerHTML += `<option value="${esc(t)}">${esc(t)}</option>`;
+  }
+
+  const filtered = cs.filter(c => {
+    if(search && !c.name.toLowerCase().includes(search) && !c.id.toLowerCase().includes(search)) return false;
+    if(fStatus && c.status !== fStatus) return false;
+    if(fTerr && c.territory !== fTerr) return false;
+    return true;
+  });
+
+  for(const c of filtered){
+    h += `<tr class="clickable" onclick="viewCustomer360('${c.id}')">
+      <td><span class="mono" style="font-size:12px">${c.id}</span></td>
+      <td><strong>${esc(c.name)}</strong>${c.specialty?`<br><small style="color:var(--muted)">${esc(c.specialty)}</small>`:''}</td>
+      <td>${c.type}</td><td>${c.category||'-'}</td><td>${esc(c.territory)}</td><td>${esc(c.salesperson)}</td>
+      <td><span class="badge ${c.status==='Active'?'badge-active':'badge-inactive'}">${c.status}</span></td>
+      <td class="actions-cell" onclick="event.stopPropagation()">
+        <button class="btn btn-sm btn-outline" onclick="showCustomerForm('${c.id}')">Edit</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteCustomer('${c.id}')">Del</button>
+      </td></tr>`;
+  }
+  h += '</tbody></table></div></div>';
+  el.innerHTML = h;
+}
+
+// ── Customer Form ──
+function showCustomerForm(id){
+  const c = id ? state.customers.find(x=>x.id===id) : null;
+  let h = `<div class="modal-header"><h2>${c?'Edit':'New'} Customer</h2><button class="btn btn-sm btn-outline" onclick="closeModal()">&times;</button></div>`;
+  h += `<div class="modal-body">
+    <div class="field-row"><div class="field-group"><label>Customer Name <span class="req">*</span></label><input id="cf-name" value="${esc(c?.name||'')}"></div>
+    <div class="field-group"><label>Type <span class="req">*</span></label><select id="cf-type"><option ${c?.type==='Individual'?'selected':''}>Individual</option><option ${c?.type==='Business'?'selected':''}>Business</option></select></div></div>
+    <div class="field-row"><div class="field-group"><label>Category</label><select id="cf-category"><option ${c?.category==='Doctor'?'selected':''}>Doctor</option><option ${c?.category==='Pharmacy'?'selected':''}>Pharmacy</option><option ${c?.category==='Hospital'?'selected':''}>Hospital</option><option ${c?.category==='Distributor'?'selected':''}>Distributor</option></select></div>
+    <div class="field-group"><label>Specialty</label><input id="cf-specialty" value="${esc(c?.specialty||'')}"></div></div>
+    <div class="field-row"><div class="field-group"><label>Phone</label><input id="cf-phone" value="${esc(c?.phone||'')}"></div>
+    <div class="field-group"><label>Email</label><input id="cf-email" value="${esc(c?.email||'')}"></div></div>
+    <div class="field-row full"><div class="field-group"><label>Address</label><input id="cf-address" value="${esc(c?.address||'')}"></div></div>
+    <div class="field-row"><div class="field-group"><label>SBU</label><select id="cf-sbu"><option ${c?.sbu==='Pharma'?'selected':''}>Pharma</option><option ${c?.sbu==='Diagnostics'?'selected':''}>Diagnostics</option></select></div>
+    <div class="field-group"><label>Region</label><input id="cf-region" value="${esc(c?.region||'Dhaka')}"></div></div>
+    <div class="field-row"><div class="field-group"><label>Area</label><input id="cf-area" value="${esc(c?.area||'')}"></div>
+    <div class="field-group"><label>Territory</label><input id="cf-territory" value="${esc(c?.territory||'')}"></div></div>
+    <div class="field-row"><div class="field-group"><label>Salesperson</label><input id="cf-salesperson" value="${esc(c?.salesperson||'')}"></div>
+    <div class="field-group"><label>Status</label><select id="cf-status"><option ${c?.status==='Active'?'selected':''}>Active</option><option ${c?.status==='Inactive'?'selected':''}>Inactive</option></select></div></div>
+  </div>`;
+  h += `<div class="modal-footer">
+    <button class="btn btn-outline btn-sm" onclick="closeModal()">Cancel</button>
+    <button class="btn btn-primary btn-sm" onclick="saveCustomer('${c?.id||''}')">${c?'Update':'Create'}</button>
+  </div>`;
+  document.getElementById('modal').innerHTML = h;
+  document.getElementById('modal-overlay').classList.add('show');
+}
+
+async function saveCustomer(id){
+  const body = {
+    name: document.getElementById('cf-name').value,
+    type: document.getElementById('cf-type').value,
+    category: document.getElementById('cf-category').value,
+    specialty: document.getElementById('cf-specialty').value,
+    phone: document.getElementById('cf-phone').value,
+    email: document.getElementById('cf-email').value,
+    address: document.getElementById('cf-address').value,
+    sbu: document.getElementById('cf-sbu').value,
+    region: document.getElementById('cf-region').value,
+    area: document.getElementById('cf-area').value,
+    territory: document.getElementById('cf-territory').value,
+    salesperson: document.getElementById('cf-salesperson').value,
+    status: document.getElementById('cf-status').value,
+  };
+  if(!body.name){ alert('Customer name is required'); return; }
+  try{
+    if(id) await apiPut('/api/customers/'+id, body);
+    else await apiPost('/api/customers', body);
+    closeModal();
+    state.customers = await apiGet('/api/customers');
+    renderCustomerList(document.getElementById('page-content'));
+  }catch(e){ alert(e.message); }
+}
+
+async function deleteCustomer(id){
+  if(!confirm('Delete this customer?')) return;
+  try{ await apiDel('/api/customers/'+id); state.customers = await apiGet('/api/customers'); renderCustomerList(document.getElementById('page-content')); }catch(e){ alert(e.message); }
+}
+
+// ── Customer 360 ──
+async function viewCustomer360(customerId){
+  state.currentTab = 'customer-360';
+  buildSidebar();
+  document.getElementById('page-title').textContent = 'Customer 360°';
+  document.getElementById('header-actions').innerHTML = '<button class="btn btn-sm btn-outline" onclick="navigate(\'customers\')">← Back to Customers</button>';
+  const el = document.getElementById('page-content');
+  el.innerHTML = '<div class="section-panel"><p>Loading...</p></div>';
+
+  try{
+    const d360 = await apiGet('/api/customer/'+customerId+'/360');
+    const c = d360.customer;
+    let h = `<div class="c360-grid">
+      <div class="c360-sidebar">
+        <h3>${esc(c.name)}</h3>
+        <div class="meta">${c.id} · ${c.type} · ${c.category||''} ${c.specialty?esc(c.specialty):''}</div>
+        <div style="margin-top:12px">
+          <div class="detail"><span class="lbl">Phone</span>${esc(c.phone||'-')}</div>
+          <div class="detail"><span class="lbl">Email</span>${esc(c.email||'-')}</div>
+          <div class="detail"><span class="lbl">Address</span>${esc(c.address||'-')}</div>
+          <div class="detail"><span class="lbl">SBU</span>${esc(c.sbu||'-')}</div>
+          <div class="detail"><span class="lbl">Region</span>${esc(c.region||'-')}</div>
+          <div class="detail"><span class="lbl">Area</span>${esc(c.area||'-')}</div>
+          <div class="detail"><span class="lbl">Territory</span>${esc(c.territory||'-')}</div>
+          <div class="detail"><span class="lbl">Salesperson</span>${esc(c.salesperson||'-')}</div>
+          <div class="detail"><span class="lbl">Status</span><span class="badge ${c.status==='Active'?'badge-active':'badge-inactive'}">${c.status}</span></div>
+          <div class="detail"><span class="lbl">Created</span>${c.createdAt}</div>
+          <div style="margin-top:14px">
+            <button class="btn btn-sm btn-primary" onclick="showCustomerForm('${c.id}')">Edit Customer</button>
+          </div>
+        </div>
+      </div>
+      <div class="c360-main">
+        <div class="c360-tabs">
+          <button class="c360-tab active" onclick="switch360Tab(this,'contacts')">Contacts (${d360.contacts.length})</button>
+          <button class="c360-tab" onclick="switch360Tab(this,'leads')">Leads (${d360.leads.length})</button>
+          <button class="c360-tab" onclick="switch360Tab(this,'opportunities')">Opps (${d360.opportunities.length})</button>
+          <button class="c360-tab" onclick="switch360Tab(this,'visits')">Visits (${d360.visits.length})</button>
+          <button class="c360-tab" onclick="switch360Tab(this,'orders')">Orders (${d360.orders.length})</button>
+          <button class="c360-tab" onclick="switch360Tab(this,'complaints')">Complaints (${d360.complaints.length})</button>
+          <button class="c360-tab" onclick="switch360Tab(this,'timeline')">Timeline</button>
+        </div>
+        <div id="c360-detail" class="section-panel"></div>
+      </div>
+    </div>`;
+    el.innerHTML = h;
+    window._c360data = d360;
+    render360Tab('contacts');
+  }catch(e){ el.innerHTML = `<div class="section-panel"><p>Error: ${esc(e.message)}</p></div>`; }
+}
+
+function switch360Tab(btn, tab){
+  document.querySelectorAll('.c360-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  render360Tab(tab);
+}
+
+function render360Tab(tab){
+  const d = window._c360data;
+  const el = document.getElementById('c360-detail');
+  let items = d[tab] || [];
+  if(tab==='timeline') items = d.activities || [];
+
+  let h = '';
+  if(tab==='contacts'){
+    h = '<table><thead><tr><th>Name</th><th>Designation</th><th>Phone</th><th>Email</th><th>Primary</th></tr></thead><tbody>';
+    for(const x of items) h += `<tr><td><strong>${esc(x.name)}</strong></td><td>${esc(x.designation||'-')}</td><td>${esc(x.phone||'-')}</td><td>${esc(x.email||'-')}</td><td>${x.isPrimary?'Yes':''}</td></tr>`;
+    h += '</tbody></table>';
+  }else if(tab==='leads'){
+    h = '<table><thead><tr><th>ID</th><th>Name</th><th>Source</th><th>Status</th><th>Follow-up</th></tr></thead><tbody>';
+    for(const x of items) h += `<tr><td class="mono">${x.id}</td><td>${esc(x.name)}</td><td>${esc(x.source)}</td><td><span class="badge badge-${x.status.toLowerCase()}">${x.status}</span></td><td>${x.followUpDate||'-'}</td></tr>`;
+    h += '</tbody></table>';
+  }else if(tab==='opportunities'){
+    h = '<table><thead><tr><th>ID</th><th>Name</th><th>Value</th><th>Prob</th><th>Stage</th><th>Closing</th></tr></thead><tbody>';
+    for(const x of items) h += `<tr><td class="mono">${x.id}</td><td>${esc(x.name)}</td><td>${x.expectedValue.toLocaleString()}</td><td>${x.probability}%</td><td>${esc(x.stage)}</td><td>${x.closingDate}</td></tr>`;
+    h += '</tbody></table>';
+  }else if(tab==='visits'){
+    h = '<table><thead><tr><th>ID</th><th>Purpose</th><th>Check-in</th><th>Check-out</th><th>Findings</th></tr></thead><tbody>';
+    for(const x of items) h += `<tr><td class="mono">${x.id}</td><td>${esc(x.purpose)}</td><td>${new Date(x.checkIn).toLocaleString()}</td><td>${new Date(x.checkOut).toLocaleString()}</td><td>${esc(x.findings||'-')}</td></tr>`;
+    h += '</tbody></table>';
+  }else if(tab==='orders'){
+    h = '<table><thead><tr><th>ID</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead><tbody>';
+    for(const x of items) h += `<tr><td class="mono">${x.id}</td><td>${x.totalAmount.toLocaleString()}</td><td><span class="badge badge-${x.status.toLowerCase()}">${x.status}</span></td><td>${x.createdAt}</td></tr>`;
+    h += '</tbody></table>';
+  }else if(tab==='complaints'){
+    h = '<table><thead><tr><th>ID</th><th>Category</th><th>Priority</th><th>Status</th><th>CSAT</th></tr></thead><tbody>';
+    for(const x of items) h += `<tr><td class="mono">${x.id}</td><td>${esc(x.category)}</td><td><span class="badge badge-${x.priority.toLowerCase()}">${x.priority}</span></td><td><span class="badge badge-${x.status.toLowerCase().replace(' ','')}">${x.status}</span></td><td>${x.csat||'-'}</td></tr>`;
+    h += '</tbody></table>';
+  }else if(tab==='timeline'){
+    h = '<table><thead><tr><th>Date</th><th>Type</th><th>Description</th><th>By</th></tr></thead><tbody>';
+    for(const x of items) h += `<tr><td>${new Date(x.createdAt).toLocaleString()}</td><td><span class="badge badge-active">${esc(x.type)}</span></td><td>${esc(x.description)}</td><td>${esc(x.performedBy)}</td></tr>`;
+    h += '</tbody></table>';
+  }
+  el.innerHTML = items.length ? h : '<p style="color:var(--muted);padding:12px">No records found.</p>';
+}
+
+// ── Lead Management ──
+async function renderLeadList(el){
+  try{ state.leads = await apiGet('/api/leads'); }catch(e){}
+  let h = '<div class="search-bar"><input type="text" id="lead-search" placeholder="Search leads..." oninput="renderLeadList(document.getElementById(\'page-content\'))"><select id="lead-filter-status" onchange="renderLeadList(document.getElementById(\'page-content\'))"><option value="">All Status</option><option value="New">New</option><option value="Qualified">Qualified</option><option value="Converted">Converted</option><option value="Lost">Lost</option></select></div>';
+  h += '<div class="section-panel"><div class="table-wrap"><table><thead><tr><th>ID</th><th>Name</th><th>Source</th><th>Product</th><th>Assigned To</th><th>Status</th><th>Follow-up</th><th>Actions</th></tr></thead><tbody>';
+  const search = document.getElementById('lead-search')?.value?.toLowerCase()||'';
+  const fStatus = document.getElementById('lead-filter-status')?.value||'';
+  for(const l of state.leads){
+    if(search && !l.name.toLowerCase().includes(search)) continue;
+    if(fStatus && l.status !== fStatus) continue;
+    h += `<tr>
+      <td class="mono">${l.id}</td><td><strong>${esc(l.name)}</strong></td><td>${esc(l.source)}</td><td>${esc(l.product)}</td><td>${esc(l.assignedTo)}</td>
+      <td><span class="badge badge-${l.status.toLowerCase()}">${l.status}</span></td><td>${l.followUpDate||'-'}</td>
+      <td class="actions-cell">
+        <button class="btn btn-sm btn-outline" onclick="showLeadForm('${l.id}')">Edit</button>
+        ${l.status==='New'||l.status==='Qualified'?`<button class="btn btn-sm btn-cyan" onclick="convertLead('${l.id}')">Convert</button>`:''}
+        <button class="btn btn-sm btn-danger" onclick="deleteRecord('leads','${l.id}')">Del</button>
+      </td></tr>`;
+  }
+  h += '</tbody></table></div></div>';
+  el.innerHTML = h;
+}
+
+function showLeadForm(id){
+  const l = id ? state.leads.find(x=>x.id===id) : null;
+  let h = `<div class="modal-header"><h2>${l?'Edit':'New'} Lead</h2><button class="btn btn-sm btn-outline" onclick="closeModal()">&times;</button></div>`;
+  h += `<div class="modal-body">
+    <div class="field-row"><div class="field-group"><label>Name <span class="req">*</span></label><input id="lf-name" value="${esc(l?.name||'')}"></div>
+    <div class="field-group"><label>Source</label><select id="lf-source"><option ${l?.source==='Referral'?'selected':''}>Referral</option><option ${l?.source==='Website'?'selected':''}>Website</option><option ${l?.source==='Cold Call'?'selected':''}>Cold Call</option><option ${l?.source==='Walk-in'?'selected':''}>Walk-in</option><option ${l?.source==='Existing Customer'?'selected':''}>Existing Customer</option></select></div></div>
+    <div class="field-row"><div class="field-group"><label>Product</label><input id="lf-product" value="${esc(l?.product||'')}"></div>
+    <div class="field-group"><label>Assigned To</label><input id="lf-assigned" value="${esc(l?.assignedTo||'')}"></div></div>
+    <div class="field-row"><div class="field-group"><label>Status</label><select id="lf-status"><option ${l?.status==='New'?'selected':''}>New</option><option ${l?.status==='Qualified'?'selected':''}>Qualified</option><option ${l?.status==='Converted'?'selected':''}>Converted</option><option ${l?.status==='Lost'?'selected':''}>Lost</option></select></div>
+    <div class="field-group"><label>Follow-up Date</label><input type="date" id="lf-followup" value="${l?.followUpDate||''}"></div></div>
+    <div class="field-row full"><div class="field-group"><label>Notes</label><textarea id="lf-notes">${esc(l?.notes||'')}</textarea></div></div>
+    <div class="field-row full"><div class="field-group" id="lf-lostreason-group" style="display:${l?.status==='Lost'?'block':'none'}"><label>Lost Reason</label><input id="lf-lostreason" value="${esc(l?.lostReason||'')}"></div></div>
+  </div>`;
+  h += `<div class="modal-footer"><button class="btn btn-outline btn-sm" onclick="closeModal()">Cancel</button><button class="btn btn-primary btn-sm" onclick="saveLead('${l?.id||''}')">${l?'Update':'Create'}</button></div>`;
+  document.getElementById('modal').innerHTML = h;
+  document.getElementById('modal-overlay').classList.add('show');
+  setTimeout(()=>{
+    const sel = document.getElementById('lf-status');
+    if(sel) sel.onchange = ()=>{ document.getElementById('lf-lostreason-group').style.display = sel.value==='Lost'?'block':'none'; };
+  },50);
+}
+
+async function saveLead(id){
+  const body = {
+    name: document.getElementById('lf-name').value,
+    source: document.getElementById('lf-source').value,
+    product: document.getElementById('lf-product').value,
+    assignedTo: document.getElementById('lf-assigned').value,
+    status: document.getElementById('lf-status').value,
+    followUpDate: document.getElementById('lf-followup').value||null,
+    notes: document.getElementById('lf-notes').value,
+    lostReason: document.getElementById('lf-lostreason').value||null,
+  };
+  if(!body.name){ alert('Name required'); return; }
+  try{
+    if(id) await apiPut('/api/leads/'+id, body);
+    else await apiPost('/api/leads', body);
+    closeModal();
+    state.leads = await apiGet('/api/leads');
+    renderLeadList(document.getElementById('page-content'));
+  }catch(e){ alert(e.message); }
+}
+
+async function convertLead(id){
+  const l = state.leads.find(x=>x.id===id); if(!l) return;
+  showCustomerForm();
+  document.getElementById('cf-name').value = l.name;
+  document.getElementById('cf-salesperson').value = l.assignedTo||'';
+  // After save, mark lead as converted
+  try{ await apiPut('/api/leads/'+id,{...l,status:'Converted',customerId:'pending'}); }catch(e){}
+}
+
+// ── Opportunity Management ──
+async function renderOpportunityList(el){
+  try{ state.opportunities = await apiGet('/api/opportunities'); }catch(e){}
+  let h = '<div class="search-bar"><input type="text" id="opp-search" placeholder="Search opportunities..." oninput="renderOpportunityList(document.getElementById(\'page-content\'))"><select id="opp-filter-stage" onchange="renderOpportunityList(document.getElementById(\'page-content\'))"><option value="">All Stages</option><option>Prospecting</option><option>Qualification</option><option>Proposal</option><option>Negotiation</option><option>Closed-Won</option><option>Closed-Lost</option></select></div>';
+  h += '<div class="section-panel"><div class="table-wrap"><table><thead><tr><th>ID</th><th>Name</th><th>Product</th><th>Value</th><th>Prob</th><th>Stage</th><th>Closing</th><th>Actions</th></tr></thead><tbody>';
+  const search = document.getElementById('opp-search')?.value?.toLowerCase()||'';
+  const fStage = document.getElementById('opp-filter-stage')?.value||'';
+  for(const o of state.opportunities){
+    if(search && !o.name.toLowerCase().includes(search) && !o.product.toLowerCase().includes(search)) continue;
+    if(fStage && o.stage !== fStage) continue;
+    const cust = state.customers.find(c=>c.id===o.customerId);
+    h += `<tr>
+      <td class="mono">${o.id}</td>
+      <td><strong>${esc(o.name)}</strong><br><small style="color:var(--muted)">${cust?esc(cust.name):o.customerId}</small></td>
+      <td>${esc(o.product)}</td><td>${o.expectedValue.toLocaleString()}</td><td>${o.probability}%</td>
+      <td>${esc(o.stage)}</td><td>${o.closingDate}</td>
+      <td class="actions-cell">
+        <button class="btn btn-sm btn-outline" onclick="showOppForm('${o.id}')">Edit</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteRecord('opportunities','${o.id}')">Del</button>
+      </td></tr>`;
+  }
+  h += '</tbody></table></div></div>';
+  el.innerHTML = h;
+}
+
+function showOppForm(id){
+  const o = id ? state.opportunities.find(x=>x.id===id) : null;
+  let custOpts = '<option value="">Select customer</option>';
+  for(const c of state.customers) custOpts += `<option value="${c.id}" ${o?.customerId===c.id?'selected':''}>${esc(c.name)} (${c.id})</option>`;
+  let h = `<div class="modal-header"><h2>${o?'Edit':'New'} Opportunity</h2><button class="btn btn-sm btn-outline" onclick="closeModal()">&times;</button></div>`;
+  h += `<div class="modal-body">
+    <div class="field-row"><div class="field-group"><label>Name <span class="req">*</span></label><input id="of-name" value="${esc(o?.name||'')}"></div>
+    <div class="field-group"><label>Customer</label><select id="of-customer">${custOpts}</select></div></div>
+    <div class="field-row"><div class="field-group"><label>Product</label><input id="of-product" value="${esc(o?.product||'')}"></div>
+    <div class="field-group"><label>Expected Value</label><input type="number" id="of-value" value="${o?.expectedValue||0}"></div></div>
+    <div class="field-row"><div class="field-group"><label>Probability (%)</label><input type="number" id="of-prob" min="0" max="100" value="${o?.probability||50}"></div>
+    <div class="field-group"><label>Stage</label><select id="of-stage"><option ${o?.stage==='Prospecting'?'selected':''}>Prospecting</option><option ${o?.stage==='Qualification'?'selected':''}>Qualification</option><option ${o?.stage==='Proposal'?'selected':''}>Proposal</option><option ${o?.stage==='Negotiation'?'selected':''}>Negotiation</option><option ${o?.stage==='Closed-Won'?'selected':''}>Closed-Won</option><option ${o?.stage==='Closed-Lost'?'selected':''}>Closed-Lost</option></select></div></div>
+    <div class="field-row full"><div class="field-group"><label>Closing Date</label><input type="date" id="of-closing" value="${o?.closingDate||''}"></div></div>
+    <div class="field-row full"><div class="field-group"><label>Notes</label><textarea id="of-notes">${esc(o?.notes||'')}</textarea></div></div>
+  </div>`;
+  h += `<div class="modal-footer"><button class="btn btn-outline btn-sm" onclick="closeModal()">Cancel</button><button class="btn btn-primary btn-sm" onclick="saveOpp('${o?.id||''}')">${o?'Update':'Create'}</button></div>`;
+  document.getElementById('modal').innerHTML = h;
+  document.getElementById('modal-overlay').classList.add('show');
+}
+
+async function saveOpp(id){
+  const body = {
+    customerId: document.getElementById('of-customer').value,
+    name: document.getElementById('of-name').value,
+    product: document.getElementById('of-product').value,
+    expectedValue: parseInt(document.getElementById('of-value').value)||0,
+    probability: parseInt(document.getElementById('of-prob').value)||0,
+    stage: document.getElementById('of-stage').value,
+    closingDate: document.getElementById('of-closing').value,
+    notes: document.getElementById('of-notes').value,
+  };
+  if(!body.name){ alert('Name required'); return; }
+  try{
+    if(id) await apiPut('/api/opportunities/'+id, body);
+    else await apiPost('/api/opportunities', body);
+    closeModal(); renderData('opportunities');
+  }catch(e){ alert(e.message); }
+}
+
+// ── Visit Management ──
+async function renderVisitList(el){
+  try{ state.visits = await apiGet('/api/visits'); }catch(e){}
+  let h = '<div class="search-bar"><input type="text" id="visit-search" placeholder="Search visits..." oninput="renderVisitList(document.getElementById(\'page-content\'))"></div>';
+  h += '<div class="section-panel"><div class="table-wrap"><table><thead><tr><th>ID</th><th>Customer</th><th>Type</th><th>Purpose</th><th>Check-in</th><th>Findings</th><th>Actions</th></tr></thead><tbody>';
+  const search = document.getElementById('visit-search')?.value?.toLowerCase()||'';
+  for(const v of state.visits){
+    if(search){ const cust = state.customers.find(c=>c.id===v.customerId); if(!v.purpose.toLowerCase().includes(search) && !(cust?.name||'').toLowerCase().includes(search)) continue; }
+    const cust = state.customers.find(c=>c.id===v.customerId);
+    h += `<tr>
+      <td class="mono">${v.id}</td><td><strong>${cust?esc(cust.name):v.customerId}</strong></td><td>${v.type}</td><td>${esc(v.purpose)}</td>
+      <td>${new Date(v.checkIn).toLocaleString()}</td><td>${esc(v.findings||'-')}</td>
+      <td class="actions-cell">
+        <button class="btn btn-sm btn-outline" onclick="showVisitForm('${v.id}')">Edit</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteRecord('visits','${v.id}')">Del</button>
+      </td></tr>`;
+  }
+  h += '</tbody></table></div></div>';
+  el.innerHTML = h;
+}
+
+function showVisitForm(id){
+  const v = id ? state.visits.find(x=>x.id===id) : null;
+  let custOpts = '<option value="">Select customer</option>';
+  for(const c of state.customers) custOpts += `<option value="${c.id}" ${v?.customerId===c.id?'selected':''}>${esc(c.name)}</option>`;
+  let h = `<div class="modal-header"><h2>${v?'Edit':'Log'} Visit</h2><button class="btn btn-sm btn-outline" onclick="closeModal()">&times;</button></div>`;
+  h += `<div class="modal-body">
+    <div class="field-row"><div class="field-group"><label>Customer <span class="req">*</span></label><select id="vf-customer">${custOpts}</select></div>
+    <div class="field-group"><label>Type</label><select id="vf-type"><option ${v?.type==='Customer Visit'?'selected':''}>Customer Visit</option><option ${v?.type==='Market Visit'?'selected':''}>Market Visit</option><option ${v?.type==='Planned Visit'?'selected':''}>Planned Visit</option></select></div></div>
+    <div class="field-row full"><div class="field-group"><label>Purpose</label><input id="vf-purpose" value="${esc(v?.purpose||'')}"></div></div>
+    <div class="field-row"><div class="field-group"><label>Check-in</label><input type="datetime-local" id="vf-checkin" value="${v?.checkIn||''}"></div>
+    <div class="field-group"><label>Check-out</label><input type="datetime-local" id="vf-checkout" value="${v?.checkOut||''}"></div></div>
+    <div class="field-row full"><div class="field-group"><label>Salesperson</label><input id="vf-salesperson" value="${esc(v?.salesperson||state.user?.name||'')}"></div></div>
+    <div class="field-row full"><div class="field-group"><label>Findings</label><textarea id="vf-findings">${esc(v?.findings||'')}</textarea></div></div>
+    <div class="field-row full"><div class="field-group"><label>Next Action</label><input id="vf-nextaction" value="${esc(v?.nextAction||'')}"></div></div>
+  </div>`;
+  h += `<div class="modal-footer"><button class="btn btn-outline btn-sm" onclick="closeModal()">Cancel</button><button class="btn btn-primary btn-sm" onclick="saveVisit('${v?.id||''}')">${v?'Update':'Log Visit'}</button></div>`;
+  document.getElementById('modal').innerHTML = h;
+  document.getElementById('modal-overlay').classList.add('show');
+}
+
+async function saveVisit(id){
+  const body = {
+    customerId: document.getElementById('vf-customer').value,
+    type: document.getElementById('vf-type').value,
+    purpose: document.getElementById('vf-purpose').value,
+    salesperson: document.getElementById('vf-salesperson').value,
+    checkIn: document.getElementById('vf-checkin').value||new Date().toISOString(),
+    checkOut: document.getElementById('vf-checkout').value||new Date(Date.now()+1800000).toISOString(),
+    findings: document.getElementById('vf-findings').value,
+    nextAction: document.getElementById('vf-nextaction').value,
+  };
+  if(!body.customerId){ alert('Select a customer'); return; }
+  try{
+    if(id) await apiPut('/api/visits/'+id, body);
+    else await apiPost('/api/visits', body);
+    closeModal(); renderData('visits');
+  }catch(e){ alert(e.message); }
+}
+
+// ── Order Management ──
+async function renderOrderList(el){
+  try{ state.orders = await apiGet('/api/orders'); }catch(e){}
+  let h = '<div class="search-bar"><input type="text" id="order-search" placeholder="Search orders..." oninput="renderOrderList(document.getElementById(\'page-content\'))"><select id="order-filter-status" onchange="renderOrderList(document.getElementById(\'page-content\'))"><option value="">All Status</option><option>Pending</option><option>Approved</option><option>Dispatched</option><option>Delivered</option></select></div>';
+  h += '<div class="section-panel"><div class="table-wrap"><table><thead><tr><th>ID</th><th>Customer</th><th>Amount</th><th>Items</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead><tbody>';
+  const search = document.getElementById('order-search')?.value?.toLowerCase()||'';
+  const fStatus = document.getElementById('order-filter-status')?.value||'';
+  for(const o of state.orders){
+    if(search){ const cust = state.customers.find(c=>c.id===o.customerId); if(!o.id.toLowerCase().includes(search) && !(cust?.name||'').toLowerCase().includes(search)) continue; }
+    if(fStatus && o.status !== fStatus) continue;
+    const cust = state.customers.find(c=>c.id===o.customerId);
+    h += `<tr>
+      <td class="mono">${o.id}</td><td><strong>${cust?esc(cust.name):o.customerId}</strong></td>
+      <td>${o.totalAmount.toLocaleString()}</td><td>${o.items?o.items.length:0}</td>
+      <td><span class="badge badge-${o.status.toLowerCase()}">${o.status}</span></td><td>${o.createdAt}</td>
+      <td class="actions-cell">
+        <button class="btn btn-sm btn-outline" onclick="showOrderForm('${o.id}')">Edit</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteRecord('orders','${o.id}')">Del</button>
+      </td></tr>`;
+  }
+  h += '</tbody></table></div></div>';
+  el.innerHTML = h;
+}
+
+function showOrderForm(id){
+  const o = id ? state.orders.find(x=>x.id===id) : null;
+  let custOpts = '<option value="">Select customer</option>';
+  for(const c of state.customers) custOpts += `<option value="${c.id}" ${o?.customerId===c.id?'selected':''}>${esc(c.name)}</option>`;
+  let itemsHtml = ''; let itemCount = 1;
+  if(o?.items){ for(const it of o.items){ itemsHtml += orderItemRow(itemCount++, it.product, it.quantity, it.unitPrice); } }
+  if(!itemsHtml) itemsHtml = orderItemRow(itemCount++,'','','');
+  let h = `<div class="modal-header"><h2>${o?'Edit':'New'} Order</h2><button class="btn btn-sm btn-outline" onclick="closeModal()">&times;</button></div>`;
+  h += `<div class="modal-body">
+    <div class="field-row"><div class="field-group"><label>Customer <span class="req">*</span></label><select id="ofd-customer">${custOpts}</select></div>
+    <div class="field-group"><label>Status</label><select id="ofd-status"><option ${o?.status==='Pending'?'selected':''}>Pending</option><option ${o?.status==='Approved'?'selected':''}>Approved</option><option ${o?.status==='Dispatched'?'selected':''}>Dispatched</option><option ${o?.status==='Delivered'?'selected':''}>Delivered</option></select></div></div>
+    <div style="margin-bottom:12px"><strong style="font-size:13px">Items</strong></div>
+    <div id="order-items">${itemsHtml}</div>
+    <button class="btn btn-sm btn-outline" onclick="addOrderItem()">+ Add Item</button>
+    <div class="field-row full" style="margin-top:12px"><div class="field-group"><label>Total Amount</label><input type="number" id="ofd-total" value="${o?.totalAmount||0}" readonly></div></div>
+  </div>`;
+  h += `<div class="modal-footer"><button class="btn btn-outline btn-sm" onclick="closeModal()">Cancel</button><button class="btn btn-primary btn-sm" onclick="saveOrder('${o?.id||''}')">${o?'Update':'Create'}</button></div>`;
+  document.getElementById('modal').innerHTML = h;
+  document.getElementById('modal-overlay').classList.add('show');
+}
+
+function orderItemRow(n, product, qty, price){
+  return `<div class="field-row" style="margin-bottom:8px">
+    <div class="field-group"><input placeholder="Product" id="oi-product-${n}" value="${esc(product)}" onchange="calcOrderTotal()"></div>
+    <div class="field-group"><input type="number" placeholder="Qty" id="oi-qty-${n}" value="${qty}" style="width:80px" onchange="calcOrderTotal()"></div>
+    <div class="field-group"><input type="number" placeholder="Price" id="oi-price-${n}" value="${price}" style="width:100px" onchange="calcOrderTotal()"></div>
+  </div>`;
+}
+
+let _orderItemCount = 1;
+function addOrderItem(){
+  _orderItemCount++;
+  const div = document.createElement('div');
+  div.className='field-row'; div.style.marginBottom='8px';
+  div.innerHTML = `<div class="field-group"><input placeholder="Product" id="oi-product-${_orderItemCount}" onchange="calcOrderTotal()"></div><div class="field-group"><input type="number" placeholder="Qty" id="oi-qty-${_orderItemCount}" style="width:80px" onchange="calcOrderTotal()"></div><div class="field-group"><input type="number" placeholder="Price" id="oi-price-${_orderItemCount}" style="width:100px" onchange="calcOrderTotal()"></div>`;
+  document.getElementById('order-items').appendChild(div);
+}
+
+function calcOrderTotal(){
+  let total = 0;
+  for(let i=1;i<=_orderItemCount;i++){
+    const qty = parseInt(document.getElementById('oi-qty-'+i)?.value)||0;
+    const price = parseInt(document.getElementById('oi-price-'+i)?.value)||0;
+    total += qty * price;
+  }
+  const el = document.getElementById('ofd-total'); if(el) el.value = total;
+}
+
+async function saveOrder(id){
+  const items = [];
+  for(let i=1;i<=_orderItemCount;i++){
+    const p = document.getElementById('oi-product-'+i)?.value;
+    if(p){ items.push({product:p, quantity:parseInt(document.getElementById('oi-qty-'+i)?.value)||0, unitPrice:parseInt(document.getElementById('oi-price-'+i)?.value)||0}); }
+  }
+  const body = {
+    customerId: document.getElementById('ofd-customer').value,
+    status: document.getElementById('ofd-status').value,
+    items,
+    totalAmount: parseInt(document.getElementById('ofd-total').value)||0,
+  };
+  if(!body.customerId){ alert('Select a customer'); return; }
+  try{
+    if(id) await apiPut('/api/orders/'+id, body);
+    else await apiPost('/api/orders', body);
+    closeModal(); renderData('orders');
+  }catch(e){ alert(e.message); }
+}
+
+// ── Complaint Management ──
+async function renderComplaintList(el){
+  try{ state.complaints = await apiGet('/api/complaints'); }catch(e){}
+  let h = '<div class="search-bar"><input type="text" id="comp-search" placeholder="Search complaints..." oninput="renderComplaintList(document.getElementById(\'page-content\'))"><select id="comp-filter-status" onchange="renderComplaintList(document.getElementById(\'page-content\'))"><option value="">All Status</option><option>Open</option><option>In Progress</option><option>Resolved</option><option>Closed</option></select></div>';
+  h += '<div class="section-panel"><div class="table-wrap"><table><thead><tr><th>ID</th><th>Customer</th><th>Category</th><th>Priority</th><th>Status</th><th>SLA</th><th>Actions</th></tr></thead><tbody>';
+  const search = document.getElementById('comp-search')?.value?.toLowerCase()||'';
+  const fStatus = document.getElementById('comp-filter-status')?.value||'';
+  for(const c of state.complaints){
+    if(search){ const cust = state.customers.find(x=>x.id===c.customerId); if(!c.category.toLowerCase().includes(search) && !(cust?.name||'').toLowerCase().includes(search)) continue; }
+    if(fStatus && c.status !== fStatus) continue;
+    const cust = state.customers.find(x=>x.id===c.customerId);
+    h += `<tr>
+      <td class="mono">${c.id}</td><td><strong>${cust?esc(cust.name):c.customerId}</strong></td><td>${esc(c.category)}</td>
+      <td><span class="badge badge-${c.priority.toLowerCase()}">${c.priority}</span></td>
+      <td><span class="badge badge-${c.status.toLowerCase().replace(' ','')}">${c.status}</span></td>
+      <td>${c.sla||'-'}</td>
+      <td class="actions-cell">
+        <button class="btn btn-sm btn-outline" onclick="showComplaintForm('${c.id}')">Edit</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteRecord('complaints','${c.id}')">Del</button>
+      </td></tr>`;
+  }
+  h += '</tbody></table></div></div>';
+  el.innerHTML = h;
+}
+
+function showComplaintForm(id){
+  const c = id ? state.complaints.find(x=>x.id===id) : null;
+  let custOpts = '<option value="">Select customer</option>';
+  for(const x of state.customers) custOpts += `<option value="${x.id}" ${c?.customerId===x.id?'selected':''}>${esc(x.name)}</option>`;
+  let h = `<div class="modal-header"><h2>${c?'Edit':'Register'} Complaint</h2><button class="btn btn-sm btn-outline" onclick="closeModal()">&times;</button></div>`;
+  h += `<div class="modal-body">
+    <div class="field-row"><div class="field-group"><label>Customer <span class="req">*</span></label><select id="cmf-customer">${custOpts}</select></div>
+    <div class="field-group"><label>Category</label><select id="cmf-category"><option ${c?.category==='Product Quality'?'selected':''}>Product Quality</option><option ${c?.category==='Delivery'?'selected':''}>Delivery</option><option ${c?.category==='Billing'?'selected':''}>Billing</option><option ${c?.category==='Service'?'selected':''}>Service</option><option ${c?.category==='Other'?'selected':''}>Other</option></select></div></div>
+    <div class="field-row"><div class="field-group"><label>Priority</label><select id="cmf-priority"><option ${c?.priority==='Low'?'selected':''}>Low</option><option ${c?.priority==='Medium'?'selected':''}>Medium</option><option ${c?.priority==='High'?'selected':''}>High</option><option ${c?.priority==='Critical'?'selected':''}>Critical</option></select></div>
+    <div class="field-group"><label>Status</label><select id="cmf-status"><option ${c?.status==='Open'?'selected':''}>Open</option><option ${c?.status==='In Progress'?'selected':''}>In Progress</option><option ${c?.status==='Resolved'?'selected':''}>Resolved</option><option ${c?.status==='Closed'?'selected':''}>Closed</option></select></div></div>
+    <div class="field-row full"><div class="field-group"><label>Description</label><textarea id="cmf-desc">${esc(c?.description||'')}</textarea></div></div>
+    <div class="field-row"><div class="field-group"><label>Assigned To</label><input id="cmf-assigned" value="${esc(c?.assignedTo||'')}"></div>
+    <div class="field-group"><label>SLA Date</label><input type="date" id="cmf-sla" value="${c?.sla||''}"></div></div>
+    <div class="field-row full"><div class="field-group"><label>Resolution</label><textarea id="cmf-resolution">${esc(c?.resolution||'')}</textarea></div></div>
+    <div class="field-row"><div class="field-group"><label>CSAT (1-5)</label><input type="number" id="cmf-csat" min="1" max="5" value="${c?.csat||''}"></div></div>
+  </div>`;
+  h += `<div class="modal-footer"><button class="btn btn-outline btn-sm" onclick="closeModal()">Cancel</button><button class="btn btn-primary btn-sm" onclick="saveComplaint('${c?.id||''}')">${c?'Update':'Register'}</button></div>`;
+  document.getElementById('modal').innerHTML = h;
+  document.getElementById('modal-overlay').classList.add('show');
+}
+
+async function saveComplaint(id){
+  const body = {
+    customerId: document.getElementById('cmf-customer').value,
+    category: document.getElementById('cmf-category').value,
+    priority: document.getElementById('cmf-priority').value,
+    status: document.getElementById('cmf-status').value,
+    description: document.getElementById('cmf-desc').value,
+    assignedTo: document.getElementById('cmf-assigned').value,
+    sla: document.getElementById('cmf-sla').value||null,
+    resolution: document.getElementById('cmf-resolution').value||null,
+    csat: parseInt(document.getElementById('cmf-csat').value)||null,
+  };
+  if(!body.customerId){ alert('Select a customer'); return; }
+  try{
+    if(id) await apiPut('/api/complaints/'+id, body);
+    else await apiPost('/api/complaints', body);
+    closeModal(); renderData('complaints');
+  }catch(e){ alert(e.message); }
+}
+
+// ── Contact Center ──
+function renderContactCenter(el){
+  el.innerHTML = `<div class="section-panel"><h2>Contact Center</h2>
+    <p style="color:var(--muted)">Inbound/outbound call logging, telesales, and agent performance tracking.</p>
+    <div style="margin-top:16px"><strong>Future features:</strong> Call logging, IVR integration, ViciDial sync, Agent dashboard.</div>
+    <div style="margin-top:12px;display:flex;gap:8px">
+      <button class="btn btn-sm btn-primary" disabled>Log Inbound Call</button>
+      <button class="btn btn-sm btn-outline" disabled>Start Outbound</button>
+    </div>
+  </div>`;
+}
+
+// ── Sales Excellence ──
+function renderSalesExcellence(el){
+  el.innerHTML = `<div class="section-panel"><h2>Sales Excellence</h2>
+    <p style="color:var(--muted)">Distributor/dealer management, market & outlet audits, target vs achievement, stock availability monitoring.</p>
+    <div class="stats-grid" style="margin-top:16px">
+      <div class="stat-card"><div class="label">Target Achievement</div><div class="value">82%</div><div class="sub">Monthly target: 25,00,000 BDT</div></div>
+      <div class="stat-card green"><div class="label">Market Audits</div><div class="value">12</div><div class="sub">This month</div></div>
+      <div class="stat-card cyan"><div class="label">Outlet Audits</div><div class="value">45</div><div class="sub">This month</div></div>
+      <div class="stat-card amber"><div class="label">Stock Gaps</div><div class="value">3</div><div class="sub">Stores below threshold</div></div>
+    </div>
+    <div style="margin-top:12px">
+      <button class="btn btn-sm btn-primary" disabled>New Audit</button>
+      <button class="btn btn-sm btn-outline" disabled style="margin-left:8px">View Reports</button>
+    </div>
+  </div>`;
+}
+
+// ── Reports ──
+function renderReports(el){
+  el.innerHTML = `<div class="section-panel"><h2>Reports & Analytics</h2>
+    <p style="color:var(--muted)">Comprehensive dashboards and analytics across all modules.</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;margin-top:16px">
+      <div class="section-panel" style="cursor:pointer;background:var(--navy-50)" onclick="navigate('dashboard')"><strong>Sales Dashboard</strong><br><small style="color:var(--muted)">Sales KPIs, pipeline, revenue</small></div>
+      <div class="section-panel" style="cursor:pointer;background:var(--navy-50)" onclick="navigate('customers')"><strong>Customer Dashboard</strong><br><small style="color:var(--muted)">Customer analytics & segments</small></div>
+      <div class="section-panel" style="cursor:pointer;background:var(--navy-50)" onclick="navigate('leads')"><strong>Lead Conversion</strong><br><small style="color:var(--muted)">Funnel & conversion rates</small></div>
+      <div class="section-panel" style="cursor:pointer;background:var(--navy-50)" onclick="navigate('complaints')"><strong>Complaint Dashboard</strong><br><small style="color:var(--muted)">SLA compliance, CSAT trends</small></div>
+      <div class="section-panel" style="cursor:pointer;background:var(--navy-50)"><strong>Revenue Analytics</strong><br><small style="color:var(--muted)">Revenue by region, SBU, period</small></div>
+      <div class="section-panel" style="cursor:pointer;background:var(--navy-50)"><strong>Customer Acquisition</strong><br><small style="color:var(--muted)">Acquisition & retention trends</small></div>
+    </div>
+  </div>`;
+}
+
+// ── Generic helpers ──
+function closeModal(){ document.getElementById('modal-overlay').classList.remove('show'); }
+async function deleteRecord(entity, id){
+  if(!confirm('Delete this record?')) return;
+  try{ await apiDel('/api/'+entity+'/'+id); await renderData(entity); }catch(e){ alert(e.message); }
+}
+async function renderData(entity){
+  switch(entity){
+    case 'customers': state.customers = await apiGet('/api/customers'); renderCustomerList(document.getElementById('page-content')); break;
+    case 'leads': state.leads = await apiGet('/api/leads'); renderLeadList(document.getElementById('page-content')); break;
+    case 'opportunities': state.opportunities = await apiGet('/api/opportunities'); renderOpportunityList(document.getElementById('page-content')); break;
+    case 'visits': state.visits = await apiGet('/api/visits'); renderVisitList(document.getElementById('page-content')); break;
+    case 'orders': state.orders = await apiGet('/api/orders'); renderOrderList(document.getElementById('page-content')); break;
+    case 'complaints': state.complaints = await apiGet('/api/complaints'); renderComplaintList(document.getElementById('page-content')); break;
+  }
+}
+
+// ── Init ──
+async function initApp(){
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app-screen').style.display = 'block';
+  buildSidebar();
+  await renderPage();
+  // Click outside modal to close
+  document.getElementById('modal-overlay').addEventListener('click', function(e){ if(e.target===this) closeModal(); });
+}
+
+// Start
+(async function(){
+  const ok = await checkSession();
+  if(ok){
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app-screen').style.display = 'block';
+    await initApp();
+  }else{
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('app-screen').style.display = 'none';
+  }
+  // Enter key on login
+  document.getElementById('login-password').addEventListener('keydown', function(e){ if(e.key==='Enter') doLogin(); });
+})();
+</script>
+</body>
+</html>

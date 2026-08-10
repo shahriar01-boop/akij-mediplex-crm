@@ -1,7 +1,7 @@
 {
-  "name": "akij-mediplex-crm",
-  "version": "1.0.0",
-  "description": "AKIJ Mediplex HPO Field CRM — shared multi-user deployment",
+  "name": "akij-crm",
+  "version": "2.0.0",
+  "description": "AKIJ CRM — Full-featured Customer Relationship Management",
   "private": true,
   "scripts": {
     "start": "node server.js",
