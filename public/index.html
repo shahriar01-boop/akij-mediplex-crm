@@ -1237,8 +1237,23 @@ async function renderTeam(el){
   const salesHeads = (accts.users||[]).filter(u=>u.role==='sales_head');
   const sos = (accts.users||[]).filter(u=>u.role==='so');
   try{ state.customers = state.customers.length ? state.customers : await apiGet('/api/customers'); }catch(e){}
+  const isAdmin = ['super_admin','admin'].includes(state.user?.role);
 
   let h = '';
+
+  // User Management (admin only)
+  if(isAdmin){
+    h += '<div class="section-panel"><h2>User Management</h2><button class="btn btn-primary btn-sm" onclick="showUserForm()">+ Add User</button></div>';
+  }
+
+  // All Users table (admin only)
+  if(isAdmin){
+    h += '<div class="section-panel"><h2>All Users</h2><div class="table-wrap"><table><thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Territory</th><th>SBU</th><th></th></tr></thead><tbody>';
+    for(const u of (accts.users||[])){
+      h += `<tr><td><strong>${esc(u.name)}</strong></td><td style="font-family:monospace;font-size:12px;">${esc(u.username)}</td><td><span class="badge badge-active">${esc(u.role)}</span></td><td>${esc(u.territory||'—')}</td><td>${esc(u.sbu||'—')}</td><td class="row-actions"><button class="btn btn-sm btn-outline" onclick="showUserForm('${u.username}')">Edit</button><button class="btn btn-sm btn-danger" onclick="deleteUser('${u.username}')">Del</button></td></tr>`;
+    }
+    h += '</tbody></table></div></div>';
+  }
 
   // Supervisor → Team Members mapping
   h += '<div class="section-panel"><h2>Supervisor → Team Member Assignments</h2><div class="table-wrap"><table><thead><tr><th>Supervisor</th><th>Team Members</th><th>Total SOs</th><th>Total Customers</th><th>Actions</th></tr></thead><tbody>';
@@ -1330,6 +1345,57 @@ async function saveMemberAssign(soUsername){
   try{
     await apiPut('/api/accounts/'+soUsername, { supervisor });
     closeModal();
+    state.accounts = await apiGet('/api/accounts');
+    renderTeam(document.getElementById('page-content'));
+  }catch(e){ alert(e.message); }
+}
+
+// Add/Edit User form (admin only)
+function showUserForm(username){
+  const accts = state.accounts || { users: [] };
+  const u = username ? (accts.users||[]).find(x=>x.username===username) : null;
+  let h = `<div class="modal-header"><h2>${u?'Edit':'Add'} User</h2><button class="btn btn-sm btn-outline" onclick="closeModal()">&times;</button></div>`;
+  h += '<div class="modal-body">';
+  h += `<div class="field-row"><div class="field-group"><label>Full Name <span class="req">*</span></label><input id="uf-name" value="${esc(u?.name||'')}"></div>
+    <div class="field-group"><label>Username <span class="req">*</span></label><input id="uf-username" value="${esc(u?.username||'')}" ${u?'readonly':''} style="${u?'background:var(--navy-50);':''}"></div></div>`;
+  h += `<div class="field-row"><div class="field-group"><label>${u?'New Password (leave blank to keep)':'Password'} ${u?'':'<span class="req">*</span>'}</label><input type="text" id="uf-password" placeholder="${u?'Leave blank to keep current':''}"></div>
+    <div class="field-group"><label>Role <span class="req">*</span></label><select id="uf-role"><option ${u?.role==='sales_head'?'selected':''}>sales_head</option><option ${u?.role==='so'?'selected':''}>so</option><option ${u?.role==='contact_center'?'selected':''}>contact_center</option><option ${u?.role==='sales_excellence'?'selected':''}>sales_excellence</option><option ${u?.role==='management'?'selected':''}>management</option></select></div></div>`;
+  h += `<div class="field-row"><div class="field-group"><label>Territory</label><input id="uf-territory" value="${esc(u?.territory||'')}"></div>
+    <div class="field-group"><label>SBU</label><select id="uf-sbu"><option ${u?.sbu==='Pharma'?'selected':''}>Pharma</option><option ${u?.sbu==='Diagnostics'?'selected':''}>Diagnostics</option><option ${u?.sbu==='All'?'selected':''}>All</option></select></div></div>`;
+  h += `<div class="field-row full"><div class="field-group"><label>Email</label><input type="email" id="uf-email" value="${esc(u?.email||'')}"></div></div>`;
+  h += `</div><div class="modal-footer"><button class="btn btn-outline btn-sm" onclick="closeModal()">Cancel</button><button class="btn btn-primary btn-sm" onclick="saveUser('${u?.username||''}')">${u?'Update':'Create'}</button></div>`;
+  document.getElementById('modal').innerHTML = h;
+  document.getElementById('modal-overlay').classList.add('show');
+}
+
+async function saveUser(existingUsername){
+  const name = document.getElementById('uf-name').value.trim();
+  const username = document.getElementById('uf-username').value.trim();
+  const password = document.getElementById('uf-password').value;
+  const role = document.getElementById('uf-role').value;
+  const territory = document.getElementById('uf-territory').value.trim();
+  const sbu = document.getElementById('uf-sbu').value;
+  const email = document.getElementById('uf-email').value.trim();
+  if(!name || !username || !role){ alert('Name, username, and role are required'); return; }
+  if(!existingUsername && !password){ alert('Password is required for new users'); return; }
+  try{
+    if(existingUsername){
+      const body = { name, role, territory, sbu, email };
+      if(password) body.password = password;
+      await apiPut('/api/accounts/'+existingUsername, body);
+    } else {
+      await apiPost('/api/accounts', { name, username, password, role, territory, sbu, email });
+    }
+    closeModal();
+    state.accounts = await apiGet('/api/accounts');
+    renderTeam(document.getElementById('page-content'));
+  }catch(e){ alert(e.message); }
+}
+
+async function deleteUser(username){
+  if(!confirm('Delete user "'+username+'"? This cannot be undone.')) return;
+  try{
+    await apiDel('/api/accounts/'+username);
     state.accounts = await apiGet('/api/accounts');
     renderTeam(document.getElementById('page-content'));
   }catch(e){ alert(e.message); }
