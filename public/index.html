@@ -1243,7 +1243,12 @@ async function renderTeam(el){
 
   // User Management (admin only)
   if(isAdmin){
-    h += '<div class="section-panel"><h2>User Management</h2><button class="btn btn-primary btn-sm" onclick="showUserForm()">+ Add User</button></div>';
+    h += '<div class="section-panel"><h2>Create User Credentials</h2>';
+    h += '<div style="display:flex;gap:8px;flex-wrap:wrap;">';
+    h += '<button class="btn btn-primary btn-sm" onclick="showUserForm()">+ Single User</button>';
+    h += '<button class="btn btn-cyan btn-sm" onclick="showBatchSupervisorForm()">+ Batch Supervisors</button>';
+    h += '<button class="btn btn-outline btn-sm" onclick="showBatchSOForm()">+ Batch SOs</button>';
+    h += '</div></div>';
   }
 
   // All Users table (admin only)
@@ -1399,6 +1404,88 @@ async function deleteUser(username){
     state.accounts = await apiGet('/api/accounts');
     renderTeam(document.getElementById('page-content'));
   }catch(e){ alert(e.message); }
+}
+
+// Batch supervisor creation
+function showBatchSupervisorForm(){
+  let h = `<div class="modal-header"><h2>Batch Create Supervisors</h2><button class="btn btn-sm btn-outline" onclick="closeModal()">&times;</button></div>`;
+  h += '<div class="modal-body">';
+  h += '<p style="color:var(--muted);margin-bottom:10px;">Enter one supervisor per line: <b>Full Name, Territory, Email</b> (territory and email optional). Usernames and passwords will be auto-generated.</p>';
+  h += '<textarea id="bf-supervisors" rows="10" style="width:100%;font-family:monospace;font-size:13px;" placeholder="Rafiqul Islam, Dhaka, rafiq@example.com\nMonir Hossain, Chittagong\nKamal Uddin, Sylhet, kamal@example.com"></textarea>';
+  h += '<p style="font-size:11px;color:var(--muted);margin-top:6px;">Format: <b>Name, Territory, Email</b> — or just <b>Name</b> alone.</p>';
+  h += '</div>';
+  h += '<div class="modal-footer"><button class="btn btn-outline btn-sm" onclick="closeModal()">Cancel</button><button class="btn btn-primary btn-sm" onclick="saveBatchSupervisors()">Create All</button></div>';
+  document.getElementById('modal').innerHTML = h;
+  document.getElementById('modal-overlay').classList.add('show');
+}
+
+async function saveBatchSupervisors(){
+  const raw = document.getElementById('bf-supervisors').value.trim();
+  if(!raw){ alert('Enter at least one supervisor'); return; }
+  const lines = raw.split('\n').filter(l=>l.trim());
+  const created = [];
+  for(const line of lines){
+    const parts = line.split(',').map(p=>p.trim());
+    const name = parts[0];
+    if(!name) continue;
+    const territory = parts[1] || '';
+    const email = parts[2] || '';
+    const username = name.toLowerCase().replace(/[^a-z]+/g,'.').replace(/^\.+|\.+$/g,'');
+    const password = Array.from(crypto.getRandomValues(new Uint8Array(5)), b=>'abcdefghjkmnpqrstuvwxyz23456789'[b%32]).join('');
+    try{
+      await apiPost('/api/accounts', { name, username, password, role:'sales_head', territory, sbu:'All', email });
+      created.push({name, username, password});
+    }catch(e){ /* skip duplicates */ }
+  }
+  closeModal();
+  state.accounts = await apiGet('/api/accounts');
+  renderTeam(document.getElementById('page-content'));
+  // Show generated credentials
+  if(created.length){
+    let summary = 'Created ' + created.length + ' supervisor(s):\n\n';
+    for(const c of created) summary += c.name + '\n  Username: ' + c.username + '\n  Password: ' + c.password + '\n\n';
+    alert(summary);
+  }
+}
+
+// Batch SO creation
+function showBatchSOForm(){
+  let h = `<div class="modal-header"><h2>Batch Create Sales Officers (SOs)</h2><button class="btn btn-sm btn-outline" onclick="closeModal()">&times;</button></div>`;
+  h += '<div class="modal-body">';
+  h += '<p style="color:var(--muted);margin-bottom:10px;">Enter one SO per line: <b>Full Name, Territory, SBU</b> (SBU defaults to Pharma). Usernames and passwords auto-generated.</p>';
+  h += '<textarea id="bf-sos" rows="10" style="width:100%;font-family:monospace;font-size:13px;" placeholder="Nusrat Jahan, Gulshan, Pharma\nSadia Rahman, Dhanmondi\nImran Kabir, Uttara, Pharma"></textarea>';
+  h += '</div>';
+  h += '<div class="modal-footer"><button class="btn btn-outline btn-sm" onclick="closeModal()">Cancel</button><button class="btn btn-primary btn-sm" onclick="saveBatchSOs()">Create All</button></div>';
+  document.getElementById('modal').innerHTML = h;
+  document.getElementById('modal-overlay').classList.add('show');
+}
+
+async function saveBatchSOs(){
+  const raw = document.getElementById('bf-sos').value.trim();
+  if(!raw){ alert('Enter at least one SO'); return; }
+  const lines = raw.split('\n').filter(l=>l.trim());
+  const created = [];
+  for(const line of lines){
+    const parts = line.split(',').map(p=>p.trim());
+    const name = parts[0];
+    if(!name) continue;
+    const territory = parts[1] || '';
+    const sbu = parts[2] || 'Pharma';
+    const username = name.toLowerCase().replace(/[^a-z]+/g,'.').replace(/^\.+|\.+$/g,'');
+    const password = Array.from(crypto.getRandomValues(new Uint8Array(5)), b=>'abcdefghjkmnpqrstuvwxyz23456789'[b%32]).join('');
+    try{
+      await apiPost('/api/accounts', { name, username, password, role:'so', territory, sbu, email:'' });
+      created.push({name, username, password});
+    }catch(e){ /* skip duplicates */ }
+  }
+  closeModal();
+  state.accounts = await apiGet('/api/accounts');
+  renderTeam(document.getElementById('page-content'));
+  if(created.length){
+    let summary = 'Created ' + created.length + ' SO(s):\n\n';
+    for(const c of created) summary += c.name + '\n  Username: ' + c.username + '\n  Password: ' + c.password + '\n\n';
+    alert(summary);
+  }
 }
 
 // ── Reports ──
