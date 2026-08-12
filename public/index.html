@@ -237,11 +237,18 @@ async function checkSession(){
   state.token = t;
   try{
     const r = await fetch('/api/session',{headers:{'Authorization':'Bearer '+t}});
-    if(!r.ok) return false;
-    const d = await r.json();
-    state.user = d.user;
-    return true;
-  }catch(e){ return false; }
+    if(r.ok){
+      const d = await r.json();
+      state.user = d.user;
+      return true;
+    }
+  }catch(e){}
+  // Server unreachable or token expired — fall back to cached user
+  try{
+    const cached = localStorage.getItem('crm_user');
+    if(cached){ state.user = JSON.parse(cached); return true; }
+  }catch(e){}
+  return false;
 }
 
 function logout(){
@@ -259,7 +266,17 @@ async function api(method, path, body){
   if(body) opts.body = JSON.stringify(body);
   const r = await fetch(path, opts);
   const d = await r.json();
-  if(!r.ok) throw new Error(d.error||'API error');
+  if(!r.ok){
+    // Session truly expired — redirect to login
+    if(r.status === 401){
+      localStorage.removeItem('crm_token');
+      localStorage.removeItem('crm_user');
+      document.getElementById('login-screen').style.display = 'flex';
+      document.getElementById('app-screen').style.display = 'none';
+      throw new Error('Session expired — please log in again.');
+    }
+    throw new Error(d.error||'API error');
+  }
   return d;
 }
 
